@@ -10,7 +10,7 @@ def limpar_tela() -> None:
 def ler_usuario(arq_usuario: str) -> dict:
     usuario = {}
     try:
-        with open(arq_usuario, "r") as f:
+        with open(arq_usuario, "r", encoding="utf-8") as f:
             for linha in f:
                 email, senha = linha.strip().split(":")
                 usuario[email] = senha
@@ -22,10 +22,10 @@ def ler_usuario(arq_usuario: str) -> dict:
 def criar_usuario(arq_usuario: str ,usuario: dict) -> None:
     while True:
         limpar_tela()
-        email = solicitar_email(usuario)
+        email = solicitar_email(usuario) 
         if email is None:
             return  # Usuário optou por voltar
-        senha = solicitar_senha(usuario)
+        senha = solicitar_senha()
         confirmar = confirmar_dados(email, senha)
         if confirmar == False:
             continue # Usuário decidiu refazer seu cadastro
@@ -68,17 +68,17 @@ def confirmar_dados(email: str, senha: str) -> bool:
 
     while True:
         confirmacao = input("Os dados estão corretos? (sim/não): ").strip().lower()
-        if confirmacao == ("sim", "s"):
+        if confirmacao in ("sim", "s"):
             return True
-        elif confirmacao == ("não", "nao", "n"):
-            print("\nVamos tentar novamente...\n")
+        elif confirmacao in ("não", "nao", "n"):
+            input("\nOK, pressione ENTER para tentar novamente...\n")
             return False
         else:
             print("Resposta inválida. Digite 'sim' ou 'não'.")
 
 # Grava email e senha em um arquivo .txt
 def gravar_usuario(arq_usuario: str, usuario: dict) -> None:
-    with open(arq_usuario, "w") as f:
+    with open(arq_usuario, "w", encoding="utf-8") as f:
         for email, senha in usuario.items():
             f.write(f"{email}:{senha}\n")
 
@@ -144,6 +144,7 @@ def login():
 
 def menu():
     limpar_tela()
+    
     arq_agenda = "agenda.txt"
 
     # doutor = {
