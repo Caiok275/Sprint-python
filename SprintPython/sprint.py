@@ -110,10 +110,12 @@ def login():
     usuario = ler_usuario(arq_usuario)
     while True:
         limpar_tela()
-        print("------------- Bem Vindo -------------\n" \
-        "\n1:Fazer login" \
-        "\n2:Não possui cadastro ainda? Digite 2 para Criar um usuário!\n" \
-        "\n0:SAIR")
+        print("------------- Bem Vindo -------------")
+        print()
+        print("1.Fazer Login")
+        print("2.Não possui cadastro ainda? Digite 2 para Criar um usuário!")
+        print()
+        print("0.SAIR")
 
         # Estrutar match/case
         opcao = input("Digite uma das opções:")
@@ -147,15 +149,29 @@ def menu():
     
     arq_agenda = "agenda.txt"
 
-    # doutor = {
-    #     1:José,
-    #     2:Wilson,
-    #     3:Giovana,
-    #     4:Catarina,
-    #     5:Pedro
-    # }
+    doutor = {
+        
+    }
 
-    print("---------- Menu Principal ----------")
+    while True:
+        print("---------- Menu Principal ----------")
+        print()
+        print("1.Marcar consulta")
+        print("2.Ver status da consulta")
+        print("3.Cancelar consulta")
+        print()
+        print("0.SAIR")
+
+        opcao = input("Digite uma das opções:")
+
+        match opcao:
+            case "0":
+                limpar_tela()
+                print("Finalizando o código...")
+                break
+            case _:
+                limpar_tela()
+                input("Selecione uma opção valida! Pressione ENTER para continuar...")
 
 # ---------- Execução ----------
 login = login()
