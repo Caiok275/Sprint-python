@@ -110,7 +110,7 @@ def login():
     usuario = ler_usuario(arq_usuario)
     while True:
         limpar_tela()
-        print("------------- Bem Vindo -------------")
+        print("-"*10, "Bem Vindo", "-"*10)
         print()
         print("1.Fazer Login")
         print("2.Não possui cadastro ainda? Digite 2 para Criar um usuário!")
@@ -135,8 +135,19 @@ def login():
                 limpar_tela()
                 input("Selecione uma opção valida! Pressione ENTER para continuar...")
 
-            
-            
+# Mostra o nome de todos os doutores seus status
+def mostrar_doutor(doutores: dict) -> None:
+    limpar_tela()
+    print("-"*10, "Doutores", "-"*10, "\n")
+    for nome, status in doutores.items():
+        if status["Disponivel"]:
+            status = "Disponivel"
+        else:
+            status = "Indisponivel"
+        print(f"{nome} ({status})")
+    input("\nPressione ENTER para votar ao menu...")
+
+
             
             
 
@@ -149,16 +160,47 @@ def menu():
     
     arq_agenda = "agenda.txt"
 
-    doutor = {
-        
+    doutores = {
+        "Dr.Jose": {
+            "Tipo de exame" : "Exame geral",
+            "Horas disponíveis" : ["6:00", "10:00", "14:00"],
+            "Numero da sala" : "101",
+            "Disponivel" : True
+        },
+        "Dra.Maria": {
+            "Tipo de exame": "Exame de sangue",
+            "Horas disponíveis": ["8:00", "12:00", "16:00"],
+            "Numero da sala": "102",
+            "Disponivel": True
+        },
+        "Dr.Pedro": {
+            "Tipo de exame": "Raio-X",
+            "Horas disponíveis": ["7:30", "11:30", "15:30"],
+            "Numero da sala": "103",
+            "Disponivel": True
+        },
+        "Dra.Ana": {
+            "Tipo de exame": "Ultrassom",
+            "Horas disponíveis": ["9:00", "13:00", "17:00"],
+            "Numero da sala": "104",
+            "Disponivel": True
+        },
+        "Dr.Lucas": {
+            "Tipo de exame": "Exame geral",
+            "Horas disponíveis": ["6:30", "10:30", "14:30"],
+            "Numero da sala": "105",
+            "Disponivel": True
+        }
+
     }
 
     while True:
-        print("---------- Menu Principal ----------")
+        print("-"*10, "Menu Principal", "-"*10, "\n")
         print()
         print("1.Marcar consulta")
         print("2.Ver status da consulta")
         print("3.Cancelar consulta")
+        print("4.Ver todos os Doutores")
         print()
         print("0.SAIR")
 
@@ -169,6 +211,8 @@ def menu():
                 limpar_tela()
                 print("Finalizando o código...")
                 break
+            case "4":
+                mostrar_doutor(doutores)
             case _:
                 limpar_tela()
                 input("Selecione uma opção valida! Pressione ENTER para continuar...")
