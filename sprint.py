@@ -1,6 +1,6 @@
 import os
 
-# ---------- Funções ----------
+# ================= Funções =================
 
 # Apaga o terminal independente do sistema operacional
 def limpar_tela() -> None:
@@ -107,91 +107,22 @@ def conferir_credencial(usuario: dict, email: str, senha: str) -> bool:
 
 # ======== Funções do menu principal ========
  
-# Mostra o nome de todos os doutores seus status
+# Mostra o nome de todos os doutores, sua especialidade e seus status
 def mostrar_doutor(doutores: dict) -> None:
     limpar_tela()
     print("-"*10, "Doutores", "-"*10, "\n")
-    for nome, status in doutores.items():
-        if status["Disponivel"]:
+    for nome, informacao in doutores.items():
+        tipo_consulta = informacao["Tipo de exame"]
+        if informacao["Disponivel"]:
             status = "Disponivel"
         else:
             status = "Indisponivel"
-        print(f"{nome} ({status})")
+        print(f"{nome} - {tipo_consulta} ({status})")
     input("\nPressione ENTER para votar ao menu...")
 
 def marcar_consulta(doutores: dict, agenda: dict) -> None:
-    limpar_tela()
-    while True:
-        print("-"*10, "Marcar consulta", "-"*10)
-        print()
-        print("Escolha o tipo de consulta:")
-        print("1.Raio-X")
-        print("2.Exame de sangue")
-        print("3.Exame geral")
-        print("4.Ultrassom")
-        print()
-        print("0.Voltar")
-
-        opcao = input("Digite uma das opções:")
-        match opcao:
-            case "0":
-                limpar_tela()
-                input("Voltando para o menu principal, Pressione ENTER para continuar...")
-                break
-            case "1":
-                limpar_tela()
-                tipo = "Raio-X"
-                buscar_doutor(doutores, tipo)
-
-
-            case _:
-                limpar_tela()
-                input("Selecione uma opção valida! Pressione ENTER para continuar...")
-
-def buscar_doutor(doutores:dict, tipo: str) -> None:
-    limpar_tela()
-
-    
-    
-
-        
-
-
-# ---------- Tela de Login ----------
-def login():
-    arq_usuario = "usuario.txt"
-    usuario = ler_usuario(arq_usuario)
     while True:
         limpar_tela()
-        print("-"*10, "Bem Vindo", "-"*10)
-        print()
-        print("1.Fazer Login")
-        print("2.Não possui cadastro ainda? Digite 2 para Criar um usuário!")
-        print()
-        print("0.SAIR")
-
-        # Estrutar match/case
-        opcao = input("Digite uma das opções:")
-        match opcao:
-            case "0":
-                limpar_tela()
-                print("Finalizando o código...")
-                break
-            case "1": 
-                limpar_tela()
-                liberar = autentificacao(usuario)
-                if liberar == True:
-                    return True
-            case "2":
-                criar_usuario(arq_usuario,usuario)
-            case _:
-                limpar_tela()
-                input("Selecione uma opção valida! Pressione ENTER para continuar...")
-
-
-def marcar_consulta(doutores: dict, agenda: dict) -> None:
-    limpar_tela()
-    while True:
         print("-"*10, "Marcar Exame", "-"*10)
         print()
         print("Escolha o tipo de Exame:")
@@ -227,12 +158,47 @@ def marcar_consulta(doutores: dict, agenda: dict) -> None:
             case _:
                 limpar_tela()
                 input("Selecione uma opção valida! Pressione ENTER para continuar...")
+
+# TODO função que pega o tipo de consulta selecionada e mostra na tela junto com os nomes dos doutores que fazer o tipo de exame selecionado
+def buscar_doutor(doutores:dict, tipo: str) -> None:
+    limpar_tela()
+
+# ================= Tela de Login =================
+def login():
+    arq_usuario = "usuario.txt"
+    usuario = ler_usuario(arq_usuario)
+    while True:
+        limpar_tela()
+        print("-"*10, "Bem Vindo", "-"*10)
+        print()
+        print("1.Fazer Login")
+        print("2.Não possui cadastro ainda? Digite 2 para Criar um usuário!")
+        print()
+        print("0.SAIR")
+
+        # Estrutar match/case
+        opcao = input("Digite uma das opções:")
+        match opcao:
+            case "0":
+                limpar_tela()
+                print("Finalizando o código...")
+                break
+            case "1": 
+                limpar_tela()
+                liberar = autentificacao(usuario)
+                if liberar == True:
+                    return True
+            case "2":
+                criar_usuario(arq_usuario,usuario)
+            case _:
+                limpar_tela()
+                input("Selecione uma opção valida! Pressione ENTER para continuar...")
+
+
             
 
     
-# ---------- Menu Principal ----------
-
-
+# ================= Menu Principal =================
 def menu():
     limpar_tela()
     
@@ -280,7 +246,7 @@ def menu():
     }
 
     while True:
-        print("-"*10, "Menu Principal", "-"*10, "\n")
+        print("-"*10, "Menu Principal", "-"*10)
         print()
         print("1.Marcar consulta")
         print("2.Ver status da consulta")
@@ -304,7 +270,7 @@ def menu():
                 limpar_tela()
                 input("Selecione uma opção valida! Pressione ENTER para continuar...")
 
-# ---------- Execução ----------
+# ================= Execução =================
 login = login()
 if login == True:
     menu()
