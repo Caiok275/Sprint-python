@@ -162,12 +162,13 @@ def marcar_consulta(doutores: dict, agenda: dict) -> None:
                 input("Selecione uma opção valida! Pressione ENTER para continuar...")
 
 # Função que pega o tipo de consulta selecionada e mostra na tela junto com os nomes dos doutores que fazer o tipo de exame selecionado
-# TODO filtrar todos os doutores com a key "Disponivel" como False
 def buscar_doutor(doutores:dict, tipo: str) -> None:
     limpar_tela()
     print(f"-"*10, tipo, "-"*10, "\n")
     for nome, informacoes in doutores.items():
-        if tipo in informacoes["Tipo de exame"]:
+        if informacoes.get("Disponivel") == False:
+            print("Não há nenhum doutor disponível no momento, tente mais tarde")
+        elif tipo in informacoes["Tipo de exame"]:
             h_disponivel = informacoes["Horas disponíveis"]
             print(f"{nome} - Horas disponíveis:",", ".join(h_disponivel))
     input("\nPressione ENTER para voltar ao menu principal...")
@@ -207,9 +208,6 @@ def login():
                 input("Selecione uma opção valida! Pressione ENTER para continuar...")
 
 
-            
-
-    
 # ================= Menu Principal =================
 def menu():
     limpar_tela()
@@ -241,7 +239,7 @@ def menu():
             "Tipo de exame": "Raio-X",
             "Horas disponíveis": ["9:00", "13:00", "17:00"],
             "Numero da sala": "104",
-            "Disponivel": False
+            "Disponivel": True
         },
         "Dr.Lucas": {
             "Tipo de exame": "Exame geral",
