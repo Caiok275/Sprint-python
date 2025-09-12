@@ -104,6 +104,59 @@ def autentificacao(usuario: dict) -> bool:
 def conferir_credencial(usuario: dict, email: str, senha: str) -> bool:
     return usuario.get(email) == senha
 
+
+# ======== Funções do menu principal ========
+ 
+# Mostra o nome de todos os doutores seus status
+def mostrar_doutor(doutores: dict) -> None:
+    limpar_tela()
+    print("-"*10, "Doutores", "-"*10, "\n")
+    for nome, status in doutores.items():
+        if status["Disponivel"]:
+            status = "Disponivel"
+        else:
+            status = "Indisponivel"
+        print(f"{nome} ({status})")
+    input("\nPressione ENTER para votar ao menu...")
+
+def marcar_consulta(doutores: dict, agenda: dict) -> None:
+    limpar_tela()
+    while True:
+        print("-"*10, "Marcar consulta", "-"*10)
+        print()
+        print("Escolha o tipo de consulta:")
+        print("1.Raio-X")
+        print("2.Exame de sangue")
+        print("3.Exame geral")
+        print("4.Ultrassom")
+        print()
+        print("0.Voltar")
+
+        opcao = input("Digite uma das opções:")
+        match opcao:
+            case "0":
+                limpar_tela()
+                input("Voltando para o menu principal, Pressione ENTER para continuar...")
+                break
+            case "1":
+                limpar_tela()
+                tipo = "Raio-X"
+                buscar_doutor(doutores, tipo)
+
+
+            case _:
+                limpar_tela()
+                input("Selecione uma opção valida! Pressione ENTER para continuar...")
+
+def buscar_doutor(doutores:dict, tipo: str) -> None:
+    limpar_tela()
+
+    
+    
+
+        
+
+
 # ---------- Tela de Login ----------
 def login():
     arq_usuario = "usuario.txt"
@@ -135,20 +188,7 @@ def login():
                 limpar_tela()
                 input("Selecione uma opção valida! Pressione ENTER para continuar...")
 
-# Mostra o nome de todos os doutores seus status
-def mostrar_doutor(doutores: dict) -> None:
-    limpar_tela()
-    print("-"*10, "Doutores", "-"*10, "\n")
-    for nome, status in doutores.items():
-        if status["Disponivel"]:
-            status = "Disponivel"
-        else:
-            status = "Indisponivel"
-        print(f"{nome} ({status})")
-    input("\nPressione ENTER para votar ao menu...")
 
-
-            
             
 
     
@@ -160,6 +200,7 @@ def menu():
     
     arq_agenda = "agenda.txt"
 
+    agenda = {}
     doutores = {
         "Dr.Jose": {
             "Tipo de exame" : "Exame geral",
@@ -174,13 +215,13 @@ def menu():
             "Disponivel": True
         },
         "Dr.Pedro": {
-            "Tipo de exame": "Raio-X",
+            "Tipo de exame": "Exame de sangue",
             "Horas disponíveis": ["7:30", "11:30", "15:30"],
             "Numero da sala": "103",
             "Disponivel": True
         },
         "Dra.Ana": {
-            "Tipo de exame": "Ultrassom",
+            "Tipo de exame": "Raio-X",
             "Horas disponíveis": ["9:00", "13:00", "17:00"],
             "Numero da sala": "104",
             "Disponivel": True
@@ -189,6 +230,12 @@ def menu():
             "Tipo de exame": "Exame geral",
             "Horas disponíveis": ["6:30", "10:30", "14:30"],
             "Numero da sala": "105",
+            "Disponivel": True
+        },
+        "Dr.João": {
+            "Tipo de exame": "Ultrassom",
+            "Horas disponíveis": ["6:00", "10:00", "14:00"],
+            "Numero da sala": "201",
             "Disponivel": True
         }
 
@@ -211,6 +258,8 @@ def menu():
                 limpar_tela()
                 print("Finalizando o código...")
                 break
+            case "1":
+                marcar_consulta(doutores, agenda)
             case "4":
                 mostrar_doutor(doutores)
             case _:
