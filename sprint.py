@@ -162,6 +162,19 @@ def marcar_consulta(doutores: dict, agenda: dict) -> None:
 # TODO função que pega o tipo de consulta selecionada e mostra na tela junto com os nomes dos doutores que fazer o tipo de exame selecionado
 def buscar_doutor(doutores:dict, tipo: str) -> None:
     limpar_tela()
+    # Flag para ver se tem algum doutor com a key "Disponivel" como True
+    disponivel = False
+
+    print(f"-"*10, tipo, "-"*10, "\n")
+    for nome, especialidade in doutores.items():
+        if tipo in especialidade:
+            print(f"{nome}")
+            disponivel = True
+    if not disponivel:
+        print("Todos os medicos estão ocupados, tente mais tarde")
+    input("\nPressione ENTER para voltar ao menu principal...")
+
+
 
 # ================= Tela de Login =================
 def login():
