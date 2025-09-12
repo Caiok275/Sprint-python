@@ -176,6 +176,7 @@ def buscar_doutor(doutores:dict, tipo: str) -> None:
 
 # ================= Tela de Login =================
 def login():
+    # TODO ver se dá pra converter para .json
     arq_usuario = "usuario.txt"
     usuario = ler_usuario(arq_usuario)
     while True:
@@ -216,6 +217,7 @@ def menu():
     arq_agenda = "agenda.txt"
 
     agenda = {}
+    # TODO ver se dá para transformar esse dicionario em .json 
     doutores = {
         "Dr.Jose": {
             "Tipo de exame" : "Exame geral",
@@ -283,4 +285,5 @@ def menu():
 # ================= Execução =================
 login = login()
 if login == True:
+
     menu()
