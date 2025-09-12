@@ -45,7 +45,7 @@ def solicitar_email(usuario: dict) -> str | None:
             print("\nEste endereço de email já está cadastrado. Tente novamente.\n")
         elif email == "":
             limpar_tela()
-            print("Digite um endereço de Email")
+            print("É um endereço de Email para se cadastrar\n")
         else:
             return email
         
@@ -55,7 +55,7 @@ def solicitar_senha() -> str:
         senha = input("Digite uma senha:")
         if senha == "":
             limpar_tela()
-            print("Digite uma senha:")
+            print("É necessario digitar uma senha para se dastrar\n")
             continue
         else:
             return senha
@@ -90,6 +90,8 @@ def autentificacao(usuario: dict) -> bool:
         if email == "0":
             break
         senha = input("Senha:")
+        if senha == "0":
+            break
         liberado = conferir_credencial(usuario, email, senha)
         if liberado == False:
             limpar_tela()
@@ -159,19 +161,15 @@ def marcar_consulta(doutores: dict, agenda: dict) -> None:
                 limpar_tela()
                 input("Selecione uma opção valida! Pressione ENTER para continuar...")
 
-# TODO função que pega o tipo de consulta selecionada e mostra na tela junto com os nomes dos doutores que fazer o tipo de exame selecionado
+# Função que pega o tipo de consulta selecionada e mostra na tela junto com os nomes dos doutores que fazer o tipo de exame selecionado
+# TODO filtrar todos os doutores com a key "Disponivel" como False
 def buscar_doutor(doutores:dict, tipo: str) -> None:
     limpar_tela()
-    # Flag para ver se tem algum doutor com a key "Disponivel" como True
-    disponivel = False
-
     print(f"-"*10, tipo, "-"*10, "\n")
-    for nome, especialidade in doutores.items():
-        if tipo in especialidade:
-            print(f"{nome}")
-            disponivel = True
-    if not disponivel:
-        print("Todos os medicos estão ocupados, tente mais tarde")
+    for nome, informacoes in doutores.items():
+        if tipo in informacoes["Tipo de exame"]:
+            h_disponivel = informacoes["Horas disponíveis"]
+            print(f"{nome} - Horas disponíveis: {h_disponivel}")
     input("\nPressione ENTER para voltar ao menu principal...")
 
 
@@ -241,7 +239,7 @@ def menu():
             "Tipo de exame": "Raio-X",
             "Horas disponíveis": ["9:00", "13:00", "17:00"],
             "Numero da sala": "104",
-            "Disponivel": True
+            "Disponivel": False
         },
         "Dr.Lucas": {
             "Tipo de exame": "Exame geral",
@@ -269,7 +267,6 @@ def menu():
         print("0.SAIR")
 
         opcao = input("Digite uma das opções:")
-
         match opcao:
             case "0":
                 limpar_tela()
