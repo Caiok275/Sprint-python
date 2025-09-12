@@ -169,7 +169,7 @@ def buscar_doutor(doutores:dict, tipo: str) -> None:
     for nome, informacoes in doutores.items():
         if tipo in informacoes["Tipo de exame"]:
             h_disponivel = informacoes["Horas disponíveis"]
-            print(f"{nome} - Horas disponíveis: {h_disponivel}")
+            print(f"{nome} - Horas disponíveis:",", ".join(h_disponivel))
     input("\nPressione ENTER para voltar ao menu principal...")
 
 
@@ -287,3 +287,4 @@ login = login()
 if login == True:
 
     menu()
+
