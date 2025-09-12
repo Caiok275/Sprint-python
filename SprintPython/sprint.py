@@ -189,6 +189,44 @@ def login():
                 input("Selecione uma opção valida! Pressione ENTER para continuar...")
 
 
+def marcar_consulta(doutores: dict, agenda: dict) -> None:
+    limpar_tela()
+    while True:
+        print("-"*10, "Marcar Exame", "-"*10)
+        print()
+        print("Escolha o tipo de Exame:")
+        print("1.Raio-X")
+        print("2.Exame de sangue")
+        print("3.Exame geral")
+        print("4.Ultrassom")
+        print()
+        print("0.Voltar")
+
+        opcao = input("Digite uma das opções:")
+        match opcao:
+            case "0":
+                limpar_tela()
+                input("Voltando para o menu principal, Pressione ENTER para continuar...")
+                break
+            case "1":
+                limpar_tela()
+                tipo = "Raio-X"
+                buscar_doutor(doutores, tipo)
+            case "2":
+                limpar_tela()
+                tipo = "Exame de sangue"
+                buscar_doutor(doutores, tipo)
+            case "3":
+                limpar_tela()
+                tipo = "Exame geral"
+                buscar_doutor(doutores, tipo)
+            case "4":
+                limpar_tela()
+                tipo = "Ultrassom"
+                buscar_doutor(doutores, tipo)
+            case _:
+                limpar_tela()
+                input("Selecione uma opção valida! Pressione ENTER para continuar...")
             
 
     
