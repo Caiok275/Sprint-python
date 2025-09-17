@@ -15,13 +15,25 @@ Doctors = {
     }
 }
 
-# Function to display available doctors in a menu format
-def display_doctors():
-    print("\n--- Available Doctors ---")
-    available_doctors = [name for name, info in Doctors.items() if info["is_available"]]
+# Function to display available types of exams
+def display_exam_types():
+    print("\n--- Available Types of Exams ---")
+    exam_types = set(info["type of exam"] for info in Doctors.values())
+    
+    for idx, exam in enumerate(exam_types, start=1):
+        print(f"{idx}. {exam}")
+    
+    return exam_types
+
+# Function to display doctors based on selected exam type
+def display_doctors(exam_type):
+    print(f"\n--- Available Doctors for {exam_type} ---")
+    available_doctors = [
+        name for name, info in Doctors.items() if info["is_available"] and info["type of exam"] == exam_type
+    ]
     
     if not available_doctors:
-        print("No doctors available for booking.")
+        print("No doctors available for this exam type.")
         return None
 
     for idx, name in enumerate(available_doctors, start=1):
@@ -33,12 +45,25 @@ def display_doctors():
 
 # Function to let user select a doctor and book an exam
 def book_exam():
-    available_doctors = display_doctors()
-    if not available_doctors:
+    # Step 1: Choose type of exam
+    exam_types = display_exam_types()
+    if not exam_types:
         return
 
     try:
-        # Choose doctor
+        choice = int(input("\nEnter the number of the type of exam you want: ").strip())
+        if choice < 1 or choice > len(exam_types):
+            print("Invalid choice. Please select a valid option.")
+            return
+        
+        selected_exam = list(exam_types)[choice - 1]
+        
+        # Step 2: Display available doctors for the selected exam type
+        available_doctors = display_doctors(selected_exam)
+        if not available_doctors:
+            return
+
+        # Step 3: Choose doctor
         choice = int(input("\nEnter the number of the doctor you want to book an exam with: ").strip())
         if choice < 1 or choice > len(available_doctors):
             print("Invalid choice. Please select a valid option.")
@@ -47,7 +72,7 @@ def book_exam():
         name = available_doctors[choice - 1]
         doctor = Doctors[name]
 
-        # Choose available time
+        # Step 4: Choose available time
         if not doctor["available hours"]:
             print(f"{name} has no available hours left.")
             doctor["is_available"] = False
@@ -84,4 +109,5 @@ if __name__ == "__main__":
             break
 
     print("\nFinal doctor statuses:")
-    display_doctors()
+    display_doctors("Cardiology")  # Display both types
+    display_doctors("Dermatology")
