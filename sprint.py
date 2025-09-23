@@ -1,4 +1,25 @@
 import os
+import json
+
+# Exames, doutores e horas disponíveis
+exame_geral = {
+    "Dr.José" : ["6:00", "10:00", "14:00"],
+    "Dra.Maria" : ["8:00", "12:00", "16:00"]}
+
+exame_de_sangue = {
+    "Dr.Pedro" : ["8:00", "12:00", "16:00"],
+    "Dr.Ana" :  ["9:00", "13:00", "17:00"]}
+
+raioX = {
+    "Dr.Lucas": ["7:30", "11:30", "15:30"]}
+
+ultraSom = {
+    "Dr.João" : ["6:00", "10:00", "14:00"],}
+
+doutores = [exame_geral, exame_de_sangue, raioX, ultraSom]
+tipos_consulta = ["Exame Geral", "Exame de Sangue", "Raio X", "Ultrassom"]
+
+arq_doutores = "doutores.json"
 
 # ================= Funções =================
 
@@ -106,75 +127,6 @@ def autentificacao(usuario: dict) -> bool:
 def conferir_credencial(usuario: dict, email: str, senha: str) -> bool:
     return usuario.get(email) == senha
 
-
-# ======== Funções do menu principal ========
- 
-# Mostra o nome de todos os doutores, sua especialidade e seus status
-def mostrar_doutor(doutores: dict) -> None:
-    limpar_tela()
-    print("-"*10, "Doutores", "-"*10, "\n")
-    for nome, informacao in doutores.items():
-        tipo_consulta = informacao["Tipo de exame"]
-        if informacao["Disponivel"]:
-            status = "Disponivel"
-        else:
-            status = "Indisponivel"
-        print(f"{nome} - {tipo_consulta} ({status})")
-    input("\nPressione ENTER para votar ao menu...")
-
-def marcar_consulta(doutores: dict, agenda: dict) -> None:
-    while True:
-        limpar_tela()
-        print("-"*10, "Marcar Exame", "-"*10)
-        print()
-        print("Escolha o tipo de Exame:")
-        print("1.Raio-X")
-        print("2.Exame de sangue")
-        print("3.Exame geral")
-        print("4.Ultrassom")
-        print()
-        print("0.Voltar")
-
-        opcao = input("Digite uma das opções:")
-        match opcao:
-            case "0":
-                limpar_tela()
-                input("Voltando para o menu principal, Pressione ENTER para continuar...")
-                break
-            case "1":
-                limpar_tela()
-                tipo = "Raio-X"
-                buscar_doutor(doutores, tipo)
-            case "2":
-                limpar_tela()
-                tipo = "Exame de sangue"
-                buscar_doutor(doutores, tipo)
-            case "3":
-                limpar_tela()
-                tipo = "Exame geral"
-                buscar_doutor(doutores, tipo)
-            case "4":
-                limpar_tela()
-                tipo = "Ultrassom"
-                buscar_doutor(doutores, tipo)
-            case _:
-                limpar_tela()
-                input("Selecione uma opção valida! Pressione ENTER para continuar...")
-
-# Função que pega o tipo de consulta selecionada e mostra na tela junto com os nomes dos doutores que fazer o tipo de exame selecionado
-def buscar_doutor(doutores:dict, tipo: str) -> None:
-    limpar_tela()
-    print(f"-"*10, tipo, "-"*10, "\n")
-    for nome, informacoes in doutores.items():
-        if informacoes.get("Disponivel") == False:
-            print("Não há nenhum doutor disponível no momento, tente mais tarde")
-        elif tipo in informacoes["Tipo de exame"]:
-            h_disponivel = informacoes["Horas disponíveis"]
-            print(f"{nome} - Horas disponíveis:",", ".join(h_disponivel))
-    input("\nPressione ENTER para voltar ao menu principal...")
-
-
-
 # ================= Tela de Login =================
 def login():
     # TODO ver se dá pra converter para .json
@@ -207,6 +159,71 @@ def login():
                 limpar_tela()
                 input("Selecione uma opção valida! Pressione ENTER para continuar...")
 
+# ======== Funções do menu principal ========
+
+# Grava todos os dados em um arquivo json
+def gravar_doutores(arq_doutores: str, doutores: list):
+    with open(arq_doutores, "w", encoding="utf-8") as f:
+        json.dump(doutores, f, indent=4)
+
+# Lê o documento doutores.json e retorna os dados
+def ler_doutores(arq_doutores: str):
+    try:
+        with open(arq_doutores, "r", encoding="utf-8") as f:
+            dados = json.load(f)
+    except FileNotFoundError:
+        pass  # Se não houver arquivo, apenas retorna vazio
+    return dados
+
+# Mostra todos os nomes dos doutores, seus tipos de consulta e status com base no número de horas disponíveis
+def mostrar_todos_doutores(doutores: list, tipos_consulta: list) -> None:
+    limpar_tela()
+    print("-"*10, "Doutores", "-"*10)
+
+    for i, tipo in enumerate(doutores):
+        for nomes, h_disponiveis in tipo.items():
+            if not h_disponiveis:
+                status = "Insiponivel"
+            else:
+                status = "Disponivel"
+            print(f"{nomes} - {tipos_consulta[i]} ({status})")
+    input("Pressione ENTER para voltar ao menu principal...")
+
+def mostrar_tipo_consulta(tipos_consulta: list) -> None:
+    limpar_tela()
+    print("-"*10, "Consultas", "-"*10)
+    for i, tipo in enumerate(tipos_consulta, start=1):
+        print(i, tipo)
+
+def marcar_consulta(doutores: list, tipos_consulta: list):
+    while True:
+        try:
+            escolha = int(input("Escolha uma consulta (0 para voltar):"))
+            if escolha == 0:
+                limpar_tela()
+                input("Pressione ENTER para voltar ao menu princiapal...")
+                break
+            elif escolha < 1 or escolha > len(tipos_consulta):
+                print("Escolha inválida...")
+            else:
+                escolha = list(doutores)[escolha -1]
+                disponiveis = doutores_disponiveis(escolha)
+                mostrar_doutores_disponiveis(disponiveis)
+        except ValueError:
+            input("Opção invalida, pressione ENTER para tentar novamente...")
+
+def doutores_disponiveis(escolha: any) ->list:
+    for nome, horas in escolha.items():
+        if horas:
+            disponiveis = [nome, horas]
+            return disponiveis      
+          
+def mostrar_doutores_disponiveis(disponiveis: list):
+    limpar_tela()
+    print("-"*10, "Doutores Disponíveis", "-"*10)
+    # for nome, hora in escolha.items():
+    #     print(f"{nome} - " ",".join(hora))
+
 
 # ================= Menu Principal =================
 def menu():
@@ -215,47 +232,8 @@ def menu():
     arq_agenda = "agenda.txt"
 
     agenda = {}
-    # TODO ver se dá para transformar esse dicionario em .json 
-    doutores = {
-        "Dr.Jose": {
-            "Tipo de exame" : "Exame geral",
-            "Horas disponíveis" : ["6:00", "10:00", "14:00"],
-            "Numero da sala" : "101",
-            "Disponivel" : True
-        },
-        "Dra.Maria": {
-            "Tipo de exame": "Exame de sangue",
-            "Horas disponíveis": ["8:00", "12:00", "16:00"],
-            "Numero da sala": "102",
-            "Disponivel": True
-        },
-        "Dr.Pedro": {
-            "Tipo de exame": "Exame de sangue",
-            "Horas disponíveis": ["7:30", "11:30", "15:30"],
-            "Numero da sala": "103",
-            "Disponivel": True
-        },
-        "Dra.Ana": {
-            "Tipo de exame": "Raio-X",
-            "Horas disponíveis": ["9:00", "13:00", "17:00"],
-            "Numero da sala": "104",
-            "Disponivel": True
-        },
-        "Dr.Lucas": {
-            "Tipo de exame": "Exame geral",
-            "Horas disponíveis": ["6:30", "10:30", "14:30"],
-            "Numero da sala": "105",
-            "Disponivel": True
-        },
-        "Dr.João": {
-            "Tipo de exame": "Ultrassom",
-            "Horas disponíveis": ["6:00", "10:00", "14:00"],
-            "Numero da sala": "201",
-            "Disponivel": True
-        }
 
-    }
-
+    doutores = ler_doutores(arq_doutores)
     while True:
         print("-"*10, "Menu Principal", "-"*10)
         print()
@@ -273,9 +251,10 @@ def menu():
                 print("Finalizando o código...")
                 break
             case "1":
-                marcar_consulta(doutores, agenda)
+                mostrar_tipo_consulta(tipos_consulta)
+                marcar_consulta(doutores, tipos_consulta)
             case "4":
-                mostrar_doutor(doutores)
+                mostrar_todos_doutores(doutores, tipos_consulta)
             case _:
                 limpar_tela()
                 input("Selecione uma opção valida! Pressione ENTER para continuar...")
