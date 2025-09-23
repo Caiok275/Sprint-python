@@ -179,51 +179,85 @@ def ler_doutores(arq_doutores: str):
 def mostrar_todos_doutores(doutores: list, tipos_consulta: list) -> None:
     limpar_tela()
     print("-"*10, "Doutores", "-"*10)
-
+    print()
     for i, tipo in enumerate(doutores):
         for nomes, h_disponiveis in tipo.items():
             if not h_disponiveis:
-                status = "Insiponivel"
+                status = "Indiponível"
             else:
-                status = "Disponivel"
+                status = "Disponível"
             print(f"{nomes} - {tipos_consulta[i]} ({status})")
     input("Pressione ENTER para voltar ao menu principal...")
 
-def mostrar_tipo_consulta(tipos_consulta: list) -> None:
+def marcar_consulta(doutores: list, tipos_consulta: list):
+    mostrar_tipos_consulta(tipos_consulta)
+    consulta_escolhida = escolher_consulta(doutores, tipos_consulta)
+    disponiveis = doutores_disponiveis(consulta_escolhida)
+    mostrar_doutores_disponiveis(disponiveis)
+    doutor_escolhido = escolher_doutor(disponiveis)
+    
+    mostrar_h_disponiveis(disponiveis[doutor_escolhido])
+
+
+def mostrar_tipos_consulta(tipos_consulta: list):
     limpar_tela()
     print("-"*10, "Consultas", "-"*10)
+    print()
     for i, tipo in enumerate(tipos_consulta, start=1):
         print(i, tipo)
 
-def marcar_consulta(doutores: list, tipos_consulta: list):
+def escolher_consulta(doutores: list, tipos_consultas: list):
     while True:
         try:
-            escolha = int(input("Escolha uma consulta (0 para voltar):"))
+            escolha = int(input("Escolha uma das consultas:"))
             if escolha == 0:
                 limpar_tela()
-                input("Pressione ENTER para voltar ao menu princiapal...")
+                input("Pressione ENTER para voltar ao menu principal...")
                 break
-            elif escolha < 1 or escolha > len(tipos_consulta):
-                print("Escolha inválida...")
+            elif escolha < 0 or escolha > len(tipos_consulta):
+                limpar_tela()
+                input("Opção invalida, pressione ENTER para tentar novamente...")   
             else:
-                escolha = list(doutores)[escolha -1]
-                disponiveis = doutores_disponiveis(escolha)
-                mostrar_doutores_disponiveis(disponiveis)
+                return doutores[escolha-1]
         except ValueError:
-            input("Opção invalida, pressione ENTER para tentar novamente...")
+            limpar_tela()
+            input("Opção invalida, pressione ENTER para tentar novamente...")          
 
-def doutores_disponiveis(escolha: any) ->list:
-    for nome, horas in escolha.items():
+def doutores_disponiveis(doutores:list):
+    disponiveis = {}
+    for nome, horas in exame_geral.items():
         if horas:
-            disponiveis = [nome, horas]
-            return disponiveis      
-          
-def mostrar_doutores_disponiveis(disponiveis: list):
+            disponiveis[nome] = horas
+    return disponiveis
+
+def mostrar_doutores_disponiveis(disponiveis: dict):    
     limpar_tela()
     print("-"*10, "Doutores Disponíveis", "-"*10)
-    # for nome, hora in escolha.items():
-    #     print(f"{nome} - " ",".join(hora))
+    print()
+    for i, nome in enumerate(disponiveis, start=1):
+        print(f"{i}.{nome}")
 
+def escolher_doutor(disponiveis: dict):
+    for i, nome in enumerate(disponiveis, start=1):
+        try:
+            escolha = int(input("\nEscolha um(a) doutor(a) ou pressione 0 para voltar:"))
+            if escolha == 0:
+                limpar_tela()
+                input("Pressione ENTER para voltar ao menu principal...")
+                break
+            elif escolha < 1 or escolha > i:
+                print("Escolha inválida...")            
+            else:
+                return i -1
+        except ValueError:
+            input("Opção invalida, pressione ENTER para tentar novamente...")   
+
+def mostrar_h_disponiveis(disponiveis: dict):
+    limpar_tela()
+    print("-"*10, "Horas Disponíveis", "-"*10)
+    print()
+    for nome, h_disponivel in doutores.items():
+        print(f"{nome} - ", ",".join(h_disponivel))
 
 # ================= Menu Principal =================
 def menu():
@@ -251,7 +285,6 @@ def menu():
                 print("Finalizando o código...")
                 break
             case "1":
-                mostrar_tipo_consulta(tipos_consulta)
                 marcar_consulta(doutores, tipos_consulta)
             case "4":
                 mostrar_todos_doutores(doutores, tipos_consulta)
