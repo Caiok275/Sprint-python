@@ -145,7 +145,7 @@ def login():
     usuario = ler_usuario(arq_usuario)
     while True:
         limpar_tela()
-        print("-"*10, "Bem Vindo", "-"*10)
+        print("-"*20, "Bem Vindo", "-"*20)
         print()
         print("1.Fazer Login")
         print("2.Não possui cadastro ainda? Digite 2 para Criar um usuário!")
@@ -175,7 +175,7 @@ def login():
 def selecionar_consulta():
     while True:
         limpar_tela()
-        print("-"*10, "Tipos de consulta","-"*10)
+        print("-"*20, "Tipos de consulta","-"*20)
         print()
         for i, tipo in enumerate(tipos_exame, start=1):
             print(f"{i}.{tipo}")
@@ -198,7 +198,7 @@ def doutor_disponivel(consulta_selecionada):
 def escolher_doutor(dr_disponiveis):
     while True:
         limpar_tela()
-        print("-"*10, "Doutores", "-"*10)
+        print("-"*20, "Doutores", "-"*20)
         print()
         if not dr_disponiveis:
             print("Infelizmente todos os doutores estão ocupados ")
@@ -220,7 +220,7 @@ def escolher_horas(dr_disponiveis,dr_selecionado):
     while True:
         limpar_tela()
         horas = dr_disponiveis[dr_selecionado]
-        print("-"*10, "Horas Disponíveis", "-"*10)
+        print("-"*20, "Horas Disponíveis", "-"*20)
         print()
         print(", ".join(horas))
         print()
@@ -239,9 +239,9 @@ def escolher_horas(dr_disponiveis,dr_selecionado):
             return opcao
         
 # Mostra todos os nomes dos doutores, seus tipos de consulta e status com base no número de horas disponíveis
-def mostrar_todos_doutores(doutores: list) -> None:
+def mostrar_todos_doutores(doutores: list, tipos_exame: list) -> None:
     limpar_tela()
-    print("-"*10, "Doutores", "-"*10)
+    print("-"*20, "Doutores", "-"*20)
     print()
     for i, tipo in enumerate(doutores):
         for nomes, h_disponiveis in tipo.items():
@@ -249,8 +249,8 @@ def mostrar_todos_doutores(doutores: list) -> None:
                 status = "Indiponível"
             else:
                 status = "Disponível"
-            print(f"{i}.{nomes} ({status})")
-    input("Pressione ENTER para voltar ao menu principal...")
+            print(f"{nomes} - {tipos_exame[i]} ({status})")
+    input("\nPressione ENTER para voltar ao menu principal...")
 
 def marcar_consulta(arq_agenda: str):
     index_consulta = selecionar_consulta()
@@ -276,8 +276,10 @@ def marcar_consulta(arq_agenda: str):
     input("\nPressione ENTER para voltar ao menu inícial.")
 
 def gravar_dicionario_json(info: dict,arq_json: str):
+    dados = []
+    dados.append(info)
     with open(arq_json, "a", encoding="utf-8") as f:
-        json.dump(info, f, indent=4)
+        json.dump(dados, f, ensure_ascii=False, indent=4)
     print("Consulta salva na agenda")
 
 def ler_json(arq_json: str):
@@ -291,9 +293,9 @@ def ler_json(arq_json: str):
     
 def mostrar_consulta(consulta: dict) ->None:
     limpar_tela()
-    print("-"*10, "Consulta" ,"-"*10)
+    print("-"*20, "Consulta" ,"-"*20)
     if not consulta:
-        input("Nenhuma consulta foi agendada ainda, pressione ENTER para voltar")
+        input("\nNenhuma consulta foi agendada ainda, pressione ENTER para voltar")
         pass
     for v, k in consulta.items():
         print(f"{v} - {k}")
@@ -305,7 +307,7 @@ def menu():
 
     while True:
         limpar_tela()
-        print("-"*10, "Menu Principal", "-"*10)
+        print("-"*20, "Menu Principal", "-"*20)
         print()
         print("1.Marcar consulta")
         print("2.Ver suas consultas")
@@ -326,7 +328,7 @@ def menu():
                 mostrar_consulta(agenda)
                 input("\nPressione ENTER para continuar...")
             case "4":
-                mostrar_todos_doutores(doutores)
+                mostrar_todos_doutores(doutores, tipos_exame)
             case _:
                 limpar_tela()
                 print("Selecione uma opção valida!")
