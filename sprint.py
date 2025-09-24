@@ -17,7 +17,6 @@ ultraSom = {
     "Dr.João" : ["6:00", "10:00", "14:00"],}
 
 doutores = [exame_geral, exame_de_sangue, raioX, ultraSom]
-tipos_consulta = ["Exame Geral", "Exame de Sangue", "Raio X", "Ultrassom"]
 
 arq_doutores = "doutores.json"
 
@@ -161,20 +160,77 @@ def login():
 
 # ======== Funções do menu principal ========
 
-# Grava todos os dados em um arquivo json
-def gravar_doutores(arq_doutores: str, doutores: list):
-    with open(arq_doutores, "w", encoding="utf-8") as f:
-        json.dump(doutores, f, indent=4)
+def mostrar_consultas():
+        limpar_tela()
+        print("-"*10, "Tipos de consulta","-"*10)
+        print()
+        print("1.Exame Geral") 
+        print("2.Exame de Sangue")
+        print("3.Raio-X") 
+        print("4.Ultrassom")
+        print()
 
-# Lê o documento doutores.json e retorna os dados
-def ler_doutores(arq_doutores: str):
-    try:
-        with open(arq_doutores, "r", encoding="utf-8") as f:
-            dados = json.load(f)
-    except FileNotFoundError:
-        pass  # Se não houver arquivo, apenas retorna vazio
-    return dados
+def selecionar_consulta():
+    while True:
+        opcao = input("Selecione uma das consultas:")
+        match opcao:
+            case "0":
+                limpar_tela()
+                input("Pressione ENTER para voltar ao menu principal...")
+                break
+            case "1":
+                return exame_geral
+            case "2":
+                return exame_de_sangue
+            case "3":
+                return raioX
+            case "4":
+                return ultraSom
+            case _:
+                input("Opção Invalida, pressione ENTER para tentar novamete...")
 
+def doutor_disponivel(consulta_selecionada):
+    dr_disponiveis = {}
+    for nome, horas in consulta_selecionada.items():
+        if horas:
+            dr_disponiveis[nome] = horas
+    return dr_disponiveis
+
+def escolher_doutor(dr_disponiveis):
+    while True:
+        limpar_tela()
+        print("-"*10, "Doutores", "-"*10)
+        print()
+        if not dr_disponiveis:
+            print("Infelizmente todos os doutores estão ocupados ")
+            input("pressione ENTER para voltar ao menu principal")
+            break
+        else:
+            for nome, horas in dr_disponiveis.items():
+                print(f"{nome} - Horas disponíveis:", ", ".join(horas))
+            opcao = input("\nEscreva o nome de um dos doutores (Escreva apenas o nome do doutor):")
+            if opcao not in dr_disponiveis:
+                print("Doutor não encontrado, digite o nome exatamente como foi mostrado\n")
+        return opcao
+        
+def escolher_horas(dr_disponiveis,dr_selecionado):
+    while True:
+        limpar_tela()
+        horas = dr_disponiveis[dr_selecionado]
+        print("-"*10, "Horas Disponíveis", "-"*10)
+        print()
+        print(", ".join(horas))
+        print()
+
+        opcao = input("Escreva a hora da consulta:")
+
+        if opcao not in horas:
+            limpar_tela()
+            print("Hora inválida (lembre-se de colocar : entre hora e minuto)")
+            input("Digite ENTER para continuar")
+        else:
+            return opcao
+        
 # Mostra todos os nomes dos doutores, seus tipos de consulta e status com base no número de horas disponíveis
 def mostrar_todos_doutores(doutores: list, tipos_consulta: list) -> None:
     limpar_tela()
@@ -186,78 +242,15 @@ def mostrar_todos_doutores(doutores: list, tipos_consulta: list) -> None:
                 status = "Indiponível"
             else:
                 status = "Disponível"
-            print(f"{nomes} - {tipos_consulta[i]} ({status})")
+            print(f"{i}.{nomes} ({status})")
     input("Pressione ENTER para voltar ao menu principal...")
 
-def marcar_consulta(doutores: list, tipos_consulta: list):
-    mostrar_tipos_consulta(tipos_consulta)
-    consulta_escolhida = escolher_consulta(doutores, tipos_consulta)
-    disponiveis = doutores_disponiveis(consulta_escolhida)
-    mostrar_doutores_disponiveis(disponiveis)
-    doutor_escolhido = escolher_doutor(disponiveis)
-    
-    mostrar_h_disponiveis(disponiveis[doutor_escolhido])
-
-
-def mostrar_tipos_consulta(tipos_consulta: list):
-    limpar_tela()
-    print("-"*10, "Consultas", "-"*10)
-    print()
-    for i, tipo in enumerate(tipos_consulta, start=1):
-        print(i, tipo)
-
-def escolher_consulta(doutores: list, tipos_consultas: list):
-    while True:
-        try:
-            escolha = int(input("Escolha uma das consultas:"))
-            if escolha == 0:
-                limpar_tela()
-                input("Pressione ENTER para voltar ao menu principal...")
-                break
-            elif escolha < 0 or escolha > len(tipos_consulta):
-                limpar_tela()
-                input("Opção invalida, pressione ENTER para tentar novamente...")   
-            else:
-                return doutores[escolha-1]
-        except ValueError:
-            limpar_tela()
-            input("Opção invalida, pressione ENTER para tentar novamente...")          
-
-def doutores_disponiveis(doutores:list):
-    disponiveis = {}
-    for nome, horas in exame_geral.items():
-        if horas:
-            disponiveis[nome] = horas
-    return disponiveis
-
-def mostrar_doutores_disponiveis(disponiveis: dict):    
-    limpar_tela()
-    print("-"*10, "Doutores Disponíveis", "-"*10)
-    print()
-    for i, nome in enumerate(disponiveis, start=1):
-        print(f"{i}.{nome}")
-
-def escolher_doutor(disponiveis: dict):
-    for i, nome in enumerate(disponiveis, start=1):
-        try:
-            escolha = int(input("\nEscolha um(a) doutor(a) ou pressione 0 para voltar:"))
-            if escolha == 0:
-                limpar_tela()
-                input("Pressione ENTER para voltar ao menu principal...")
-                break
-            elif escolha < 1 or escolha > i:
-                print("Escolha inválida...")            
-            else:
-                return i -1
-        except ValueError:
-            input("Opção invalida, pressione ENTER para tentar novamente...")   
-
-def mostrar_h_disponiveis(disponiveis: dict):
-    limpar_tela()
-    print("-"*10, "Horas Disponíveis", "-"*10)
-    print()
-    for nome, h_disponivel in doutores.items():
-        print(f"{nome} - ", ",".join(h_disponivel))
+def marcar_consulta():
+    mostrar_consultas()
+    consulta_selecionada = selecionar_consulta()
+    dr_disponiveis = doutor_disponivel(consulta_selecionada)
+    dr_selecionado = escolher_doutor(dr_disponiveis)
+    horas_selecionadas = escolher_horas(dr_disponiveis, dr_selecionado)
 
 # ================= Menu Principal =================
 def menu():
@@ -267,7 +260,6 @@ def menu():
 
     agenda = {}
 
-    doutores = ler_doutores(arq_doutores)
     while True:
         print("-"*10, "Menu Principal", "-"*10)
         print()
@@ -285,9 +277,9 @@ def menu():
                 print("Finalizando o código...")
                 break
             case "1":
-                marcar_consulta(doutores, tipos_consulta)
+                marcar_consulta()
             case "4":
-                mostrar_todos_doutores(doutores, tipos_consulta)
+                mostrar_todos_doutores(doutores)
             case _:
                 limpar_tela()
                 input("Selecione uma opção valida! Pressione ENTER para continuar...")
