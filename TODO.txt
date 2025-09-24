@@ -1,0 +1,7 @@
+1.Validação de dados não funcion
+2.Se voce escrever o email certo mas não a senha ele loga do mesmo jeito
+3.Cancelar consulta não funciona
+4.Json ele não grava novas listas, ele grava por cima
+5.A opção ver suas consultas mostra todas as consultas de todos os pacientes
+6.O codigo tá uma bagunça
+7.Várias funções de uso unico que poderia ser uso geral
