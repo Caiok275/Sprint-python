@@ -98,7 +98,7 @@ def confirmar_dados() -> bool:
         if confirmacao in ("sim", "s"):
             return True
         elif confirmacao in ("não", "nao", "n"):
-            input("\nOK, pressione ENTER para tentar novamente...\n")
+            input("OK, pressione ENTER para tentar novamente...")
             return False
         else:
             print("Resposta inválida. Digite 'sim' ou 'não'.")
@@ -272,11 +272,11 @@ def marcar_consulta(arq_agenda: str):
         input(doutores[index_consulta])
     limpar_tela()
     print("Consulta realizada com sucesso")
-    gravar_json(consulta,arq_agenda)
+    gravar_dicionario_json(consulta,arq_agenda)
     input("\nPressione ENTER para voltar ao menu inícial.")
 
-def gravar_json(info: dict,arq_json: str):
-    with open(arq_json, "w", encoding="utf-8") as f:
+def gravar_dicionario_json(info: dict,arq_json: str):
+    with open(arq_json, "a", encoding="utf-8") as f:
         json.dump(info, f, indent=4)
     print("Consulta salva na agenda")
 
@@ -324,12 +324,12 @@ def menu():
                 marcar_consulta(arq_agenda)
             case "2":
                 mostrar_consulta(agenda)
+                input("\nPressione ENTER para continuar...")
             case "4":
                 mostrar_todos_doutores(doutores)
             case _:
                 limpar_tela()
                 print("Selecione uma opção valida!")
-        input("\nPressione ENTER para continuar...")
 
 # ================= Execução =================
 login = login()
