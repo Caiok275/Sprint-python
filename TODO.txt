@@ -5,3 +5,4 @@
 5.A opção ver suas consultas mostra todas as consultas de todos os pacientes
 6.O codigo tá uma bagunça
 7.Várias funções de uso unico que poderia ser uso geral
+8.As listas de consulta não são salvas em json
