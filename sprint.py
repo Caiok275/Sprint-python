@@ -14,17 +14,14 @@ exame_de_sangue = {
 raioX = {
     "Dr.Lucas": ["7:30", "11:30", "15:30"]}
 
-ultrassom = {
+ultraSom = {
     "Dr.Vitor" : ["6:00", "10:00", "14:00"],}
 
-doutores = [exame_geral, exame_de_sangue, raioX, ultrassom]
-tipos_exame = ["Exame geral", "Exame de sangue", "Raio-X", "Ultrassom"]
+doutores = [exame_geral, exame_de_sangue, raioX, ultraSom]
 
-arq_doutores = "doutores.json"
+arq_doutores = "doutores.txt"
 
-# ================= Funções gerais =================
-
-# ================= Funções Tela de Login =================
+# ================= Funções =================
 
 # Apaga o terminal independente do sistema operacional
 def limpar_tela() -> None:
@@ -50,14 +47,12 @@ def criar_usuario(arq_usuario: str ,usuario: dict) -> None:
         if email is None:
             return  # Usuário optou por voltar
         senha = solicitar_senha()
-        # Pergunta se ele quer refazer o cadastr
-        mostrar_confirmar_dados(email,senha)
-        confirmar = confirmar_dados()
+        confirmar = confirmar_dados(email, senha)
         if confirmar == False:
             continue # Usuário decidiu refazer seu cadastro
         usuario[email] = senha
         input("\nUsuário cadastrado com sucesso! Pressione ENTER para continuar...\n")
-        gravar_usuario(arq_usuario,usuario)
+        dicionario_para_txt(arq_usuario,usuario)
         break
 
 # Pergunta ao usuário seu email, e o retorna vazio caso digite 0
@@ -87,27 +82,26 @@ def solicitar_senha() -> str:
             return senha
 
 # Pergunta se todos os dados inseridos estão de acordo
-def mostrar_confirmar_dados(email:str, senha: str):
+def confirmar_dados(email: str, senha: str) -> bool:
     print("\nConfira os dados antes de registrar:")
     print(f"Email: {email}")
     print(f"Senha: {senha}\n")
 
-def confirmar_dados() -> bool:
     while True:
         confirmacao = input("Os dados estão corretos? (sim/não): ").strip().lower()
         if confirmacao in ("sim", "s"):
             return True
         elif confirmacao in ("não", "nao", "n"):
-            input("OK, pressione ENTER para tentar novamente...")
+            input("\nOK, pressione ENTER para tentar novamente...\n")
             return False
         else:
             print("Resposta inválida. Digite 'sim' ou 'não'.")
 
 # Grava email e senha em um arquivo .txt
-def gravar_usuario(arq_usuario: str, usuario: dict) -> None:
-    with open(arq_usuario, "w", encoding="utf-8") as f:
-        for email, senha in usuario.items():
-            f.write(f"{email}:{senha}\n")
+def dicionario_para_txt(nome_arq: str, dicionario: dict) -> None:
+    with open(nome_arq, "w", encoding="utf-8") as f:
+        for key, value in dicionario.items():
+            f.write(f"{key}:{value}\n")
 
 # Verifica se o email e senha condizem
 def autentificacao(usuario: dict) -> bool:
@@ -133,19 +127,17 @@ def autentificacao(usuario: dict) -> bool:
 
 # Confere se a senha e o email está correto
 def conferir_credencial(usuario: dict, email: str, senha: str) -> bool:
-    for email_correto,senha_correta in usuario.items():
-        if email == email_correto and senha == senha_correta:
-            return True
-        else:
-            return False
+    if usuario.get(email) == senha:
+        return True
 
 # ================= Tela de Login =================
 def login():
+    # TODO ver se dá pra converter para .json
     arq_usuario = "usuario.txt"
     usuario = ler_usuario(arq_usuario)
     while True:
         limpar_tela()
-        print("-"*20, "Bem Vindo", "-"*20)
+        print("-"*10, "Bem Vindo", "-"*10)
         print()
         print("1.Fazer Login")
         print("2.Não possui cadastro ainda? Digite 2 para Criar um usuário!")
@@ -175,19 +167,30 @@ def login():
 def selecionar_consulta():
     while True:
         limpar_tela()
-        print("-"*20, "Tipos de consulta","-"*20)
+        print("-"*10, "Tipos de consulta","-"*10)
         print()
-        for i, tipo in enumerate(tipos_exame, start=1):
-            print(f"{i}.{tipo}")
+        print("1.Exame Geral") 
+        print("2.Exame de Sangue")
+        print("3.Raio-X") 
+        print("4.Ultrassom")
         print()
-        try:
-            opcao = int(input("Selecione uma das consultas:"))
-            if opcao >= 1 or opcao <= len(tipos_exame):
-                return opcao -1
-        except TypeError:
-            limpar_tela()
-            input("Não existe a opção selecionada, pressione ENTER para tentar novamente...")
-                
+        opcao = input("Selecione uma das consultas:")
+        match opcao:
+            case "0":
+                limpar_tela()
+                input("Pressione ENTER para voltar ao menu principal...")
+                break
+            case "1":
+                return exame_geral
+            case "2":
+                return exame_de_sangue
+            case "3":
+                return raioX
+            case "4":
+                return ultraSom
+            case _:
+                input("Opção Invalida, pressione ENTER para tentar novamete...")
+
 def doutor_disponivel(consulta_selecionada):
     dr_disponiveis = {}
     for nome, horas in consulta_selecionada.items():
@@ -198,7 +201,7 @@ def doutor_disponivel(consulta_selecionada):
 def escolher_doutor(dr_disponiveis):
     while True:
         limpar_tela()
-        print("-"*20, "Doutores", "-"*20)
+        print("-"*10, "Doutores", "-"*10)
         print()
         if not dr_disponiveis:
             print("Infelizmente todos os doutores estão ocupados ")
@@ -209,18 +212,20 @@ def escolher_doutor(dr_disponiveis):
                 print(f"{nome} - Horas disponíveis:", ", ".join(horas))
             opcao = input("\nEscreva o nome de um dos doutores (Escreva apenas o nome do doutor):")
             if opcao not in dr_disponiveis:
-                print("Doutor não encontrado, digite o nome exatamente como foi mostrado\n")
+                limpar_tela()
+                input("Doutor não encontrado, digite o nome exatamente como foi mostrado. Pressione ENTER para continuar...")
             elif opcao == "0":
                 limpar_tela()
                 input("pressione ENTER para voltar ao menu principal")
                 break
-        return opcao
+            else:
+                return opcao
         
 def escolher_horas(dr_disponiveis,dr_selecionado):
     while True:
         limpar_tela()
         horas = dr_disponiveis[dr_selecionado]
-        print("-"*20, "Horas Disponíveis", "-"*20)
+        print("-"*10, "Horas Disponíveis", "-"*10)
         print()
         print(", ".join(horas))
         print()
@@ -239,9 +244,9 @@ def escolher_horas(dr_disponiveis,dr_selecionado):
             return opcao
         
 # Mostra todos os nomes dos doutores, seus tipos de consulta e status com base no número de horas disponíveis
-def mostrar_todos_doutores(doutores: list, tipos_exame: list) -> None:
+def mostrar_todos_doutores(doutores: list) -> None:
     limpar_tela()
-    print("-"*20, "Doutores", "-"*20)
+    print("-"*10, "Doutores", "-"*10)
     print()
     for i, tipo in enumerate(doutores):
         for nomes, h_disponiveis in tipo.items():
@@ -249,65 +254,56 @@ def mostrar_todos_doutores(doutores: list, tipos_exame: list) -> None:
                 status = "Indiponível"
             else:
                 status = "Disponível"
-            print(f"{nomes} - {tipos_exame[i]} ({status})")
-    input("\nPressione ENTER para voltar ao menu principal...")
+            print(f"{i}.{nomes} ({status})")
+    input("Pressione ENTER para voltar ao menu principal...")
 
-def marcar_consulta(arq_agenda: str):
-    index_consulta = selecionar_consulta()
-    dr_disponiveis = doutor_disponivel(doutores[index_consulta])
+def marcar_consulta():
+    consulta_selecionada = selecionar_consulta()
+    dr_disponiveis = doutor_disponivel(consulta_selecionada)
     dr_selecionado = escolher_doutor(dr_disponiveis)
     horas_selecionadas = escolher_horas(dr_disponiveis, dr_selecionado)
     consulta = {
-        "Email" : email_logado,
-        "Tipo" : tipos_exame[index_consulta],
-        "Doutor" : dr_selecionado,
-        "Hora" : horas_selecionadas
+        "nome" : email_logado,
+        "tipo" : consulta_selecionada,
+        "doutor" : dr_selecionado,
+        "hora" : horas_selecionadas
         }
-    mostrar_consulta(consulta)
-    confirmar = confirmar_dados()
-    if not confirmar:
-        return
-    else:
-        doutores[index_consulta][dr_selecionado].remove(horas_selecionadas)
-        input(doutores[index_consulta])
     limpar_tela()
     print("Consulta realizada com sucesso")
-    gravar_dicionario_json(consulta,arq_agenda)
-    input("\nPressione ENTER para voltar ao menu inícial.")
+    gravar_consulta(consulta)
+    input("Pressione ENTER para voltar ao menu inícial.")
 
-def gravar_dicionario_json(info: dict,arq_json: str):
-    dados = []
-    dados.append(info)
-    with open(arq_json, "a", encoding="utf-8") as f:
-        json.dump(dados, f, ensure_ascii=False, indent=4)
+def gravar_consulta(consulta):
+    with open("agenda.json", "w", encoding="utf-8") as f:
+        json.dump(consulta, f, indent=4)
     print("Consulta salva na agenda")
 
-def ler_json(arq_json: str):
-    arquivo = {}
+def ler_agenda():
+    agenda = {}
     try:
-        with open(arq_json, "r", encoding="utf-8") as f:
-            arquivo = json.load(f)
+        with open("agenda.json", "r", encoding="utf-8") as f:
+            agenda = json.load(f)
     except FileNotFoundError:
         pass  # Se não houver arquivo, apenas retorna vazio
-    return arquivo
-    
-def mostrar_consulta(consulta: dict) ->None:
+    return agenda
+
+def mostrar_agenda():
+    agenda = ler_agenda()
     limpar_tela()
-    print("-"*20, "Consulta" ,"-"*20)
-    if not consulta:
-        input("\nNenhuma consulta foi agendada ainda, pressione ENTER para voltar")
+    print("-"*10, "Agenda", "-"*10)
+    if not agenda:
+        print("Nenhuma consulta foi agendada ainda")
         pass
-    for v, k in consulta.items():
-        print(f"{v} - {k}")
+    input(agenda)
+    
 # ================= Menu Principal =================
 def menu():
     
-    arq_agenda = "agenda.json"
-    agenda = ler_json(arq_agenda)
+    arq_agenda = "agenda.txt"
 
     while True:
         limpar_tela()
-        print("-"*20, "Menu Principal", "-"*20)
+        print("-"*10, "Menu Principal", "-"*10)
         print()
         print("1.Marcar consulta")
         print("2.Ver suas consultas")
@@ -323,15 +319,14 @@ def menu():
                 print("Finalizando o código...")
                 break
             case "1":
-                marcar_consulta(arq_agenda)
+                marcar_consulta()
             case "2":
-                mostrar_consulta(agenda)
-                input("\nPressione ENTER para continuar...")
+                mostrar_agenda()
             case "4":
-                mostrar_todos_doutores(doutores, tipos_exame)
+                mostrar_todos_doutores(doutores)
             case _:
                 limpar_tela()
-                print("Selecione uma opção valida!")
+                input("Selecione uma opção valida! Pressione ENTER para continuar...")
 
 # ================= Execução =================
 login = login()
