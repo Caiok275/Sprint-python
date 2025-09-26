@@ -102,7 +102,7 @@ def confirmar_dados() -> bool:
 
 # Grava email e senha em um arquivo .txt
 def dicionario_para_txt(nome_arq: str, dicionario: dict) -> None:
-    with open(nome_arq, "w", encoding="utf-8") as f:
+    with open(nome_arq, "a", encoding="utf-8") as f:
         for key, value in dicionario.items():
             f.write(f"{key}:{value}\n")
 
@@ -130,8 +130,11 @@ def autentificacao(usuario: dict) -> bool:
 
 # Confere se a senha e o email está correto
 def conferir_credencial(usuario: dict, email: str, senha: str) -> bool:
-    if usuario.get(email) == senha:
-        return True
+    for email_correto,senha_correta in usuario.items():
+        if email == email_correto and senha == senha_correta:
+            return True
+        else:
+            return False
 
 # ================= Tela de Login =================
 def login():
@@ -239,9 +242,9 @@ def escolher_horas(dr_disponiveis,dr_selecionado):
             return opcao
         
 # Mostra todos os nomes dos doutores, seus tipos de consulta e status com base no número de horas disponíveis
-def mostrar_todos_doutores(doutores: list) -> None:
+def mostrar_todos_doutores(doutores: list, tipos_exame: list) -> None:
     limpar_tela()
-    print("-"*10, "Doutores", "-"*10)
+    print("-"*20, "Doutores", "-"*20)
     print()
     for i, tipo in enumerate(doutores):
         for nomes, h_disponiveis in tipo.items():
@@ -249,8 +252,7 @@ def mostrar_todos_doutores(doutores: list) -> None:
                 status = "Indiponível"
             else:
                 status = "Disponível"
-            print(f"{i}.{nomes} ({status})")
-    input("Pressione ENTER para voltar ao menu principal...")
+            print(f"{nomes} - {tipos_exame[i]} ({status})")
 
 def marcar_consulta(arq_agenda):
     while True:
@@ -269,22 +271,24 @@ def marcar_consulta(arq_agenda):
         confirmacao = confirmar_dados()
         if confirmacao:
             print("Consulta realizada com sucesso a consulta será gravada em um arquivo json")
-            gravar_json(arq_agenda, consulta)
+            dicionario_para_txt(email_logado, consulta)
             doutores[index_consulta][dr_selecionado].remove(horas_selecionadas)
             break
         else:
             continue
 
-def gravar_json(arq_json,dados):
-    with open(arq_json, "a", encoding="utf-8") as f:
-        json.dump(dados, f,ensure_ascii=False, indent=4)
+def gravar_consulta(nome_arq: str, dicionario: dict) -> None:
+    with open(nome_arq + ".txt", "a", encoding="utf-8") as f:
+        f.write(f"---------- {nome_arq} ----------")
+        for key, value in dicionario.items():
+            f.write(f"{key}:{value}\n")
         f.write("\n")
-        print("Arquivo salvo com sucesso")
-
+        
 # ================= Menu Principal =================
 def menu():
     
-    arq_agenda = "agenda.json"
+    arq_agenda = "agenda.txt"
+
 
     while True:
         limpar_tela()
@@ -308,7 +312,7 @@ def menu():
             case "2":
                 mostrar_agenda()
             case "4":
-                mostrar_todos_doutores(doutores)
+                mostrar_todos_doutores(doutores, tipos_exame)
             case _:
                 limpar_tela()
                 input("Selecione uma opção valida!")
