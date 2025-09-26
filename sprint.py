@@ -20,8 +20,6 @@ ultraSom = {
 doutores = [exame_geral, exame_de_sangue, raioX, ultraSom]
 tipos_exame = ["Exame geral", "Exame de sangue", "Raio-X", "UltraSom"]
 
-arq_doutores = "doutores.txt"
-
 # ================= Funções =================
 
 # Apaga o terminal independente do sistema operacional
@@ -29,10 +27,10 @@ def limpar_tela() -> None:
     os.system("cls" if os.name == "nt" else "clear")
 
 # Lê o arquivo "usuario.txt" e retorna um dicionario "usuario"
-def ler_arquivo(nome_arq: str) -> dict:
+def ler_arquivo(nm_arq: str) -> dict:
     dados = {}
     try:
-        with open(nome_arq, "r", encoding="utf-8") as f:
+        with open(nm_arq, "r", encoding="utf-8") as f:
             for linha in f:
                 key, value = linha.strip().split(":")
                 dados[key] = value
@@ -101,8 +99,8 @@ def confirmar_dados() -> bool:
             print("Resposta inválida. Digite 'sim' ou 'não'.")
 
 # Grava email e senha em um arquivo .txt
-def dicionario_para_txt(nome_arq: str, dicionario: dict) -> None:
-    with open(nome_arq, "a", encoding="utf-8") as f:
+def dicionario_para_txt(nm_arq: str, dicionario: dict) -> None:
+    with open(nm_arq, "a", encoding="utf-8") as f:
         for key, value in dicionario.items():
             f.write(f"{key}:{value}\n")
 
@@ -140,8 +138,8 @@ def conferir_credencial(usuario: dict, email: str, senha: str) -> bool:
 def login():
     # TODO ver se dá pra converter para .json
     arq_usuario = "usuario.txt"
-    usuario = ler_arquivo(arq_usuario)
     while True:
+        usuario = ler_arquivo(arq_usuario) 
         limpar_tela()
         print("-"*10, "Bem Vindo", "-"*10)
         print()
@@ -254,7 +252,7 @@ def mostrar_todos_doutores(doutores: list, tipos_exame: list) -> None:
                 status = "Disponível"
             print(f"{nomes} - {tipos_exame[i]} ({status})")
 
-def marcar_consulta(arq_consulta):
+def marcar_consulta():
     while True:
         index_consulta = selecionar_consulta(tipos_exame)
         dr_disponiveis = doutor_disponivel(doutores[index_consulta])
@@ -270,8 +268,8 @@ def marcar_consulta(arq_consulta):
         exibir_consultas(consulta)
         confirmacao = confirmar_dados()
         if confirmacao:
-            print("Consulta realizada com sucesso a consulta será gravada em um arquivo json")
-            gravar_consulta(arq_consulta, consulta)
+            print("\nConsulta realizada com sucesso a consulta será gravada em um arquivo txt\n")
+            gravar_consulta(consulta)
             doutores[index_consulta][dr_selecionado].remove(horas_selecionadas)
             break
         else:
@@ -285,19 +283,40 @@ def exibir_consultas(consulta):
         print(f"{key}: {value}")
     print("-" * 30)
 
-def gravar_consulta(nome_arq: str, dicionario: dict) -> None:
-    with open(nome_arq, "a", encoding="utf-8") as f:
-        for key, value in dicionario.items():
-            f.write(f"{key}:{value}\n")
-
+def gravar_consulta(dicionario: dict) -> None:
+    while True:
+        try:
+            nm_arq = input("Digite um nome para o arquivo txt (não digite o nome com a extenção .txt):")
+            with open(nm_arq + ".txt", "x", encoding="utf-8") as f:
+                for key, value in dicionario.items():
+                    f.write(f"{key}:{value}\n")
+            print("Arquivo gravado com sucesso!")
+            break
+        except FileExistsError:
+            print("Um arquivo com este nome já existe, tente novamente")
+            continue
+            
+def ver_consulta():
+        nm_arq = input("\nEscreva o nome do arquivo a sua consulta foi salva (não escreva a extenção do arquivo):")
+        nm_arq = nm_arq + ".txt"
+        consulta = ler_arquivo(nm_arq)
+        print(consulta)
+        print(consulta["Usuário"])
+        if not consulta:
+            print("\nNão existe arquivo com este nome")
+        elif email_logado != consulta["Usuário"]:
+            print("A consulta gravada não pertence a esta conta, tente novamente.")
+        else:
+            print(consulta)
+            print(consulta["Usuário"])
+            # exibir_consultas(consulta)
+        
 
 
 # ================= Menu Principal =================
 def menu():
 
-    arq_consulta = email_logado + "txt"
     while True:
-        consulta = ler_arquivo(arq_consulta)
         limpar_tela()
         print("-"*10, "Menu Principal", "-"*10)
         print()
@@ -315,9 +334,9 @@ def menu():
                 print("Finalizando o código...")
                 break
             case "1":
-                marcar_consulta(arq_consulta)
+                marcar_consulta()
             case "2":
-                exibir_consultas(consulta)
+                ver_consulta()
             case "4":
                 mostrar_todos_doutores(doutores, tipos_exame)
             case _:
