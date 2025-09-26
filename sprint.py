@@ -270,6 +270,7 @@ def marcar_consulta(arq_agenda):
         if confirmacao:
             print("Consulta realizada com sucesso a consulta será gravada em um arquivo json")
             gravar_json(arq_agenda, consulta)
+            doutores[index_consulta][dr_selecionado].remove(horas_selecionadas)
             break
         else:
             continue
