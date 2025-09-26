@@ -254,7 +254,7 @@ def mostrar_todos_doutores(doutores: list, tipos_exame: list) -> None:
                 status = "Disponível"
             print(f"{nomes} - {tipos_exame[i]} ({status})")
 
-def marcar_consulta(arq_agenda):
+def marcar_consulta(arq_consulta):
     while True:
         index_consulta = selecionar_consulta(tipos_exame)
         dr_disponiveis = doutor_disponivel(doutores[index_consulta])
@@ -267,29 +267,36 @@ def marcar_consulta(arq_agenda):
             "Hora" : horas_selecionadas
             }
         limpar_tela()
-        print(consulta)
+        exibir_consultas(consulta)
         confirmacao = confirmar_dados()
         if confirmacao:
             print("Consulta realizada com sucesso a consulta será gravada em um arquivo json")
-            dicionario_para_txt(email_logado, consulta)
+            gravar_consulta(arq_consulta, consulta)
             doutores[index_consulta][dr_selecionado].remove(horas_selecionadas)
             break
         else:
             continue
 
+# Exibe as consultas
+def exibir_consultas(consulta):
+    limpar_tela()
+    print("-"*10,"consulta","-"*10)
+    for key, value in consulta.items():
+        print(f"{key}: {value}")
+    print("-" * 30)
+
 def gravar_consulta(nome_arq: str, dicionario: dict) -> None:
-    with open(nome_arq + ".txt", "a", encoding="utf-8") as f:
-        f.write(f"---------- {nome_arq} ----------")
+    with open(nome_arq, "a", encoding="utf-8") as f:
         for key, value in dicionario.items():
             f.write(f"{key}:{value}\n")
         f.write("\n")
-        
+
+
+
 # ================= Menu Principal =================
 def menu():
-    
-    arq_agenda = "agenda.txt"
 
-
+    arq_consulta = email_logado + "txt"
     while True:
         limpar_tela()
         print("-"*10, "Menu Principal", "-"*10)
@@ -308,9 +315,9 @@ def menu():
                 print("Finalizando o código...")
                 break
             case "1":
-                marcar_consulta(arq_agenda)
+                marcar_consulta(arq_consulta)
             case "2":
-                mostrar_agenda()
+                print(agenda)
             case "4":
                 mostrar_todos_doutores(doutores, tipos_exame)
             case _:
