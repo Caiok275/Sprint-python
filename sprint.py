@@ -128,11 +128,10 @@ def autentificacao(usuario: dict) -> bool:
 
 # Confere se a senha e o email está correto
 def conferir_credencial(usuario: dict, email: str, senha: str) -> bool:
-    for email_correto,senha_correta in usuario.items():
+    for email_correto, senha_correta in usuario.items():
         if email == email_correto and senha == senha_correta:
             return True
-        else:
-            return False
+    return False
 
 # ================= Tela de Login =================
 def login():
