@@ -4,18 +4,18 @@ import json
 email_logado = ""
 # Exames, doutores e horas disponíveis
 exame_geral = {
-    "Dr.Ricardo" : ["6:00", "10:00", "14:00"],
-    "Dra.Maria" : ["8:00", "12:00", "16:00"]}
+    "Dr.Ricardo" : ["6h00", "10h00", "14h00"],
+    "Dra.Maria" : ["8h00", "12h00", "16h00"]}
 
 exame_de_sangue = {
-    "Dr.Pedro" : ["8:00", "12:00", "16:00"],
-    "Dr.Ana" :  ["9:00", "13:00", "17:00"]}
+    "Dr.Pedro" : ["8h00", "12h00", "16h00"],
+    "Dr.Ana" :  ["9h00", "13h00", "17h00"]}
 
 raioX = {
-    "Dr.Lucas": ["7:30", "11:30", "15:30"]}
+    "Dr.Lucas": ["7h30", "11h30", "15h30"]}
 
 ultraSom = {
-    "Dr.Vitor" : ["6:00", "10:00", "14:00"],}
+    "Dr.Vitor" : ["6h00", "10h00", "14h00"],}
 
 doutores = [exame_geral, exame_de_sangue, raioX, ultraSom]
 tipos_exame = ["Exame geral", "Exame de sangue", "Raio-X", "UltraSom"]
@@ -29,16 +29,16 @@ def limpar_tela() -> None:
     os.system("cls" if os.name == "nt" else "clear")
 
 # Lê o arquivo "usuario.txt" e retorna um dicionario "usuario"
-def ler_usuario(arq_usuario: str) -> dict:
-    usuario = {}
+def ler_arquivo(nome_arq: str) -> dict:
+    dados = {}
     try:
-        with open(arq_usuario, "r", encoding="utf-8") as f:
+        with open(nome_arq, "r", encoding="utf-8") as f:
             for linha in f:
-                email, senha = linha.strip().split(":")
-                usuario[email] = senha
+                key, value = linha.strip().split(":")
+                dados[key] = value
     except FileNotFoundError:
         pass  # Se não houver arquivo, apenas retorna vazio
-    return usuario
+    return dados
 
 # Recebe o endereço de email e senha e implementa no dicionario "usuario"
 def criar_usuario(arq_usuario: str ,usuario: dict) -> None:
@@ -140,7 +140,7 @@ def conferir_credencial(usuario: dict, email: str, senha: str) -> bool:
 def login():
     # TODO ver se dá pra converter para .json
     arq_usuario = "usuario.txt"
-    usuario = ler_usuario(arq_usuario)
+    usuario = ler_arquivo(arq_usuario)
     while True:
         limpar_tela()
         print("-"*10, "Bem Vindo", "-"*10)
@@ -186,8 +186,8 @@ def selecionar_consulta(tipos_exame: list):
                 print("Esta opção não existe, tente novamente")
             else:
                 return opcao -1
-        except TypeError:
-            print("Esta opção não existe, tente novamente")
+        except (TypeError,ValueError):
+            input("Esta opção não existe, pressione ENTER para tentar novamente...")
 
 def doutor_disponivel(consulta_selecionada):
     dr_disponiveis = {}
@@ -289,7 +289,6 @@ def gravar_consulta(nome_arq: str, dicionario: dict) -> None:
     with open(nome_arq, "a", encoding="utf-8") as f:
         for key, value in dicionario.items():
             f.write(f"{key}:{value}\n")
-        f.write("\n")
 
 
 
@@ -298,6 +297,7 @@ def menu():
 
     arq_consulta = email_logado + "txt"
     while True:
+        consulta = ler_arquivo(arq_consulta)
         limpar_tela()
         print("-"*10, "Menu Principal", "-"*10)
         print()
@@ -317,7 +317,7 @@ def menu():
             case "1":
                 marcar_consulta(arq_consulta)
             case "2":
-                print(agenda)
+                exibir_consultas(consulta)
             case "4":
                 mostrar_todos_doutores(doutores, tipos_exame)
             case _:
