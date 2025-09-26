@@ -1,5 +1,4 @@
 import os
-import json
 
 email_logado = ""
 # Exames, doutores e horas disponíveis
@@ -208,7 +207,8 @@ def escolher_doutor(dr_disponiveis):
             opcao = input("\nEscreva o nome de um dos doutores (Escreva apenas o nome do doutor):")
             if opcao not in dr_disponiveis:
                 limpar_tela()
-                input("Doutor não encontrado, digite o nome exatamente como foi mostrado. Pressione ENTER para continuar...")
+                print("Doutor não encontrado, digite o nome exatamente como foi mostrado.")
+                input("Pressione ENTER para continuar...")
             elif opcao == "0":
                 limpar_tela()
                 input("pressione ENTER para voltar ao menu principal")
@@ -229,7 +229,7 @@ def escolher_horas(dr_disponiveis,dr_selecionado):
 
         if opcao not in horas:
             limpar_tela()
-            print("Hora inválida (lembre-se de colocar : entre hora e minuto)")
+            print("Hora inválida, escreva exatamente como foi mostrado na tela")
             input("Digite ENTER para continuar")
         elif opcao == "0":
             limpar_tela()
@@ -299,16 +299,12 @@ def ver_consulta():
         nm_arq = input("\nEscreva o nome do arquivo a sua consulta foi salva (não escreva a extenção do arquivo):")
         nm_arq = nm_arq + ".txt"
         consulta = ler_arquivo(nm_arq)
-        print(consulta)
-        print(consulta["Usuário"])
         if not consulta:
             print("\nNão existe arquivo com este nome")
         elif email_logado != consulta["Usuário"]:
             print("A consulta gravada não pertence a esta conta, tente novamente.")
         else:
-            print(consulta)
-            print(consulta["Usuário"])
-            # exibir_consultas(consulta)
+            exibir_consultas(consulta)
         
 
 
@@ -340,7 +336,7 @@ def menu():
                 mostrar_todos_doutores(doutores, tipos_exame)
             case _:
                 limpar_tela()
-                input("Selecione uma opção valida!")
+                print("Selecione uma opção valida!")
         input("Pressione ENTER para continuar...")
 
 # ================= Execução =================
