@@ -218,6 +218,8 @@ def mostrar_horas(doutores: dict, dr_selecionado: dict):
     return escolher(horas, "Horas")
 
 # Pergunta ao usuário qual doutor ou hora (dependendo da aplicação) e retorna a opção digitada
+# Para utilizar esta função, coloque o dicionario que deseja utilizar e escreva o nome deste
+# dicionário em formato string começando com letra maiuscula ex.(escolher(doutores, "Doutores"))
 def escolher(dicionario: dict, nome_dicionario: str):
     if nome_dicionario == "Doutores":
         msg = "Escreva o nome de um dos doutores:"
@@ -336,4 +338,5 @@ login = login()
 if login == True:
 
     menu()
+
 
