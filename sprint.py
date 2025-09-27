@@ -196,13 +196,6 @@ def selecionar_consulta(tipos_exame: list) -> int:
         except (TypeError,ValueError):
             input("Esta opção não existe, pressione ENTER para tentar novamente...")
 
-# def doutor_disponivel(consulta_selecionada):
-#     dr_disponiveis = {}
-#     for nome, horas in consulta_selecionada.items():
-#         if horas:
-#             dr_disponiveis[nome] = horas
-#     return dr_disponiveis
-
 # Mostra apenas os doutores que realiza o tipo de consulta selecionada
 def mostrar_doutores(doutores: dict) -> str:
     limpar_tela()
