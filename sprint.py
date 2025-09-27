@@ -204,22 +204,7 @@ def mostrar_doutores(doutores: dict) -> str:
     for nome, horas in doutores.items():
         print(f"{nome} - Horas disponíveis:", ", ".join(horas))
     
-    return escolher_doutor(doutores)
-
-# Pergunta o nome do Doutor que o usuário gostaria de agendar a consulta e retorna o seu nome
-def escolher_doutor(doutores: dict) -> str:
-    while True:
-        opcao = input("\nEscreva o nome de um dos doutores (Escreva apenas o nome do doutor):")
-        if opcao not in doutores:
-            limpar_tela()
-            print("Doutor não encontrado, digite o nome exatamente como foi mostrado.")
-            input("Pressione ENTER para continuar...")
-        elif opcao == "0":
-            limpar_tela()
-            input("pressione ENTER para voltar ao menu principal")
-            break
-        else:
-            return opcao
+    return escolher(doutores, "Doutores")
 
 # Mostra as horas disponíveis
 def mostrar_horas(doutores: dict, dr_selecionado: dict):
@@ -230,20 +215,23 @@ def mostrar_horas(doutores: dict, dr_selecionado: dict):
     print(", ".join(horas))
     print()
 
-    return escolher_doutor(horas)
+    return escolher(horas, "Horas")
 
-# Pergunta qual hora gostaria de marcar a consulta e retorna a escolha
-def escolher_horas(horas: list):
+# Pergunta ao usuário qual doutor ou hora (dependendo da aplicação) e retorna a opção digitada
+def escolher(dicionario: dict, nome_dicionario: str):
+    if nome_dicionario == "Doutores":
+        msg = "Escreva o nome de um dos doutores:"
+    else:
+        msg = "Escreva a hora da consulta:"
     while True:
-        opcao = input("Escreva a hora da consulta:")
-        if opcao not in horas:
+        opcao = input(msg)
+        if opcao == "0":
             limpar_tela()
-            print("Hora inválida, escreva exatamente como foi mostrado na tela")
-            input("Digite ENTER para continuar")
-        elif opcao == "0":
-            limpar_tela()
-            input("pressione ENTER para voltar ao menu principal")
-            break
+            print("Voltando ao menu principal")
+            return None
+        elif opcao not in dicionario:
+
+            print(f"{nome_dicionario} inválida, escreva exatamente como foi mostrado na tela")
         else:
             return opcao
         
@@ -253,6 +241,8 @@ def marcar_consulta():
         index_consulta = mostrar_tipos_consulta(tipos_exame)
         dr_selecionado = mostrar_doutores(doutores[index_consulta])
         horas_selecionadas = mostrar_horas(doutores[index_consulta], dr_selecionado)
+        if not horas_selecionadas:
+            break
         consulta = {
             "Usuário" : email_logado,
             "Tipo de consulta" : tipos_exame[index_consulta],
