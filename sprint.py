@@ -1,5 +1,6 @@
 import os
 
+# Váriavel que armazena o email do usuário após um login bem sucedido
 email_logado = ""
 # Exames, doutores e horas disponíveis
 exame_geral = {
@@ -25,7 +26,7 @@ tipos_exame = ["Exame geral", "Exame de sangue", "Raio-X", "UltraSom"]
 def limpar_tela() -> None:
     os.system("cls" if os.name == "nt" else "clear")
 
-# Lê o arquivo "usuario.txt" e retorna um dicionario "usuario"
+# Lê um arquivo .txt e retorna um dicionário
 def ler_arquivo(nm_arq: str) -> dict:
     dados = {}
     try:
@@ -45,6 +46,8 @@ def criar_usuario(arq_usuario: str ,usuario: dict) -> None:
         if email is None:
             return  # Usuário optou por voltar
         senha = solicitar_senha()
+        if senha is None:
+            return # Usuário optou por voltar
         pedir_confirmacao(email, senha)
         confirmar = confirmar_dados()
         if confirmar == False:
@@ -73,7 +76,9 @@ def solicitar_email(usuario: dict) -> str | None:
 def solicitar_senha() -> str:
     while True:
         senha = input("Digite uma senha:")
-        if senha == "":
+        if senha == "0":
+            return
+        elif senha == "":
             limpar_tela()
             print("É necessario digitar uma senha para se dastrar\n")
             continue
@@ -86,6 +91,7 @@ def pedir_confirmacao(email: str, senha:str):
     print(f"Email: {email}")
     print(f"Senha: {senha}\n")
 
+# Pergunta se todos os dados estão corretos e retorna um valor boolean dependendo da resposta
 def confirmar_dados() -> bool:
     while True:
         confirmacao = input("Os dados estão corretos? (sim/não): ").strip().lower()
@@ -97,7 +103,7 @@ def confirmar_dados() -> bool:
         else:
             print("Resposta inválida. Digite 'sim' ou 'não'.")
 
-# Grava email e senha em um arquivo .txt
+# Grava um dicionário em um arquivo .txt
 def dicionario_para_txt(nm_arq: str, dicionario: dict) -> None:
     with open(nm_arq, "a", encoding="utf-8") as f:
         for key, value in dicionario.items():
@@ -109,16 +115,17 @@ def autentificacao(usuario: dict) -> bool:
         print("Digite seu Email e Senha ou digite 0 para cancelar:\n")
         email = input("Email:")
         if email == "0":
-            break
+            break # Usuário optou por voltar
         senha = input("Senha:")
         if senha == "0":
-            break
+            break # Usuário optou por voltar
         liberado = conferir_credencial(usuario, email, senha)
         if liberado == False:
             limpar_tela()
             print("Senha ou Email incorreto!!!")
-            continue
+            continue # Email e senha incorretos
         else:
+            # Atribui o Email autentificado na variável global email_logado e retorna o valor "True"
             global email_logado
             email_logado = email
             limpar_tela()
@@ -134,9 +141,10 @@ def conferir_credencial(usuario: dict, email: str, senha: str) -> bool:
 
 # ================= Tela de Login =================
 def login():
-    # TODO ver se dá pra converter para .json
+
     arq_usuario = "usuario.txt"
     while True:
+        # lê o arquivo usuario.txt e retorna em um dicionário usuario
         usuario = ler_arquivo(arq_usuario) 
         limpar_tela()
         print("-"*10, "Bem Vindo", "-"*10)
@@ -165,19 +173,22 @@ def login():
                 input("Selecione uma opção valida! Pressione ENTER para continuar...")
 
 # ======== Funções do menu principal ========
+# Mostra todos os tipos de consulta
+def mostrar_tipos_consulta(tipos_exame: list) -> None:
+    limpar_tela()
+    print("-"*10, "Tipos de consulta","-"*10)
+    print()
+    for i, tipos in enumerate(tipos_exame, start=1):
+        print(f"{i}.{tipos}")
+    print()
 
-def selecionar_consulta(tipos_exame: list):
+    return selecionar_consulta(tipos_exame)
+
+# Pergunta o tipo de consulta e retorna a opção para ser usado como index da lista doutores
+def selecionar_consulta(tipos_exame: list) -> int:
     while True:
-        limpar_tela()
-        print("-"*10, "Tipos de consulta","-"*10)
-        print()
-        for i, tipos in enumerate(tipos_exame, start=1):
-            print(f"{i}.{tipos}")
-        print()
-
         try:
             opcao = int(input("Selecione uma das consultas:"))
-            
             if opcao < 1 or opcao > len(tipos_exame):
                 print("Esta opção não existe, tente novamente")
             else:
@@ -185,48 +196,53 @@ def selecionar_consulta(tipos_exame: list):
         except (TypeError,ValueError):
             input("Esta opção não existe, pressione ENTER para tentar novamente...")
 
-def doutor_disponivel(consulta_selecionada):
-    dr_disponiveis = {}
-    for nome, horas in consulta_selecionada.items():
-        if horas:
-            dr_disponiveis[nome] = horas
-    return dr_disponiveis
+# def doutor_disponivel(consulta_selecionada):
+#     dr_disponiveis = {}
+#     for nome, horas in consulta_selecionada.items():
+#         if horas:
+#             dr_disponiveis[nome] = horas
+#     return dr_disponiveis
 
-def escolher_doutor(dr_disponiveis):
+# Mostra apenas os doutores que realiza o tipo de consulta selecionada
+def mostrar_doutores(doutores: dict) -> str:
+    limpar_tela()
+    print("-"*10, "Doutores", "-"*10)
+    print()
+    for nome, horas in doutores.items():
+        print(f"{nome} - Horas disponíveis:", ", ".join(horas))
+    
+    return escolher_doutor(doutores)
+
+# Pergunta o nome do Doutor que o usuário gostaria de agendar a consulta e retorna o seu nome
+def escolher_doutor(doutores: dict) -> str:
     while True:
-        limpar_tela()
-        print("-"*10, "Doutores", "-"*10)
-        print()
-        if not dr_disponiveis:
-            print("Infelizmente todos os doutores estão ocupados ")
+        opcao = input("\nEscreva o nome de um dos doutores (Escreva apenas o nome do doutor):")
+        if opcao not in doutores:
+            limpar_tela()
+            print("Doutor não encontrado, digite o nome exatamente como foi mostrado.")
+            input("Pressione ENTER para continuar...")
+        elif opcao == "0":
+            limpar_tela()
             input("pressione ENTER para voltar ao menu principal")
             break
         else:
-            for nome, horas in dr_disponiveis.items():
-                print(f"{nome} - Horas disponíveis:", ", ".join(horas))
-            opcao = input("\nEscreva o nome de um dos doutores (Escreva apenas o nome do doutor):")
-            if opcao not in dr_disponiveis:
-                limpar_tela()
-                print("Doutor não encontrado, digite o nome exatamente como foi mostrado.")
-                input("Pressione ENTER para continuar...")
-            elif opcao == "0":
-                limpar_tela()
-                input("pressione ENTER para voltar ao menu principal")
-                break
-            else:
-                return opcao
-        
-def escolher_horas(dr_disponiveis,dr_selecionado):
+            return opcao
+
+# Mostra as horas disponíveis
+def mostrar_horas(doutores: dict, dr_selecionado: dict):
+    limpar_tela()
+    horas = doutores[dr_selecionado]
+    print("-"*10, "Horas Disponíveis", "-"*10)
+    print()
+    print(", ".join(horas))
+    print()
+
+    return escolher_doutor(horas)
+
+# Pergunta qual hora gostaria de marcar a consulta e retorna a escolha
+def escolher_horas(horas: list):
     while True:
-        limpar_tela()
-        horas = dr_disponiveis[dr_selecionado]
-        print("-"*10, "Horas Disponíveis", "-"*10)
-        print()
-        print(", ".join(horas))
-        print()
-
         opcao = input("Escreva a hora da consulta:")
-
         if opcao not in horas:
             limpar_tela()
             print("Hora inválida, escreva exatamente como foi mostrado na tela")
@@ -238,25 +254,12 @@ def escolher_horas(dr_disponiveis,dr_selecionado):
         else:
             return opcao
         
-# Mostra todos os nomes dos doutores, seus tipos de consulta e status com base no número de horas disponíveis
-def mostrar_todos_doutores(doutores: list, tipos_exame: list) -> None:
-    limpar_tela()
-    print("-"*20, "Doutores", "-"*20)
-    print()
-    for i, tipo in enumerate(doutores):
-        for nomes, h_disponiveis in tipo.items():
-            if not h_disponiveis:
-                status = "Indiponível"
-            else:
-                status = "Disponível"
-            print(f"{nomes} - {tipos_exame[i]} ({status})")
-
+# Pergunta ao usuário o tipo, o doutor e a hora da consulta e os junta em um dicionário consulta, caso todas as informações estejam satisfatórias, a consulta é gravada em um arquivo .txt
 def marcar_consulta():
     while True:
-        index_consulta = selecionar_consulta(tipos_exame)
-        dr_disponiveis = doutor_disponivel(doutores[index_consulta])
-        dr_selecionado = escolher_doutor(dr_disponiveis)
-        horas_selecionadas = escolher_horas(dr_disponiveis, dr_selecionado)
+        index_consulta = mostrar_tipos_consulta(tipos_exame)
+        dr_selecionado = mostrar_doutores(doutores[index_consulta])
+        horas_selecionadas = mostrar_horas(doutores[index_consulta], dr_selecionado)
         consulta = {
             "Usuário" : email_logado,
             "Tipo de consulta" : tipos_exame[index_consulta],
@@ -269,19 +272,19 @@ def marcar_consulta():
         if confirmacao:
             print("\nConsulta realizada com sucesso a consulta será gravada em um arquivo txt\n")
             gravar_consulta(consulta)
-            doutores[index_consulta][dr_selecionado].remove(horas_selecionadas)
             break
         else:
             continue
 
-# Exibe as consultas
-def exibir_consultas(consulta):
+# Mostra o dicionário consulta de forma organizada
+def exibir_consultas(consulta: dict) -> None:
     limpar_tela()
     print("-"*10,"consulta","-"*10)
     for key, value in consulta.items():
         print(f"{key}: {value}")
     print("-" * 30)
 
+# Pergunta ao usuário um nome para dar ao arquivo .txt e o grava caso não exista arquivo com este nome previamente
 def gravar_consulta(dicionario: dict) -> None:
     while True:
         try:
@@ -293,8 +296,9 @@ def gravar_consulta(dicionario: dict) -> None:
             break
         except FileExistsError:
             print("Um arquivo com este nome já existe, tente novamente")
-            continue
-            
+            continue # Já exste arquivo com este nome
+
+# Pergunta qual arquivo .txt o usuário gostaria de ver e caso o arquivo não pertença ao usuário, o arquivo o impede o arquivo de ser mostrado
 def ver_consulta():
         nm_arq = input("\nEscreva o nome do arquivo a sua consulta foi salva (não escreva a extenção do arquivo):")
         nm_arq = nm_arq + ".txt"
@@ -306,23 +310,28 @@ def ver_consulta():
         else:
             exibir_consultas(consulta)
         
-
-
+# Mostra todos os nomes dos doutores, seus tipos de consulta
+def mostrar_todos_doutores(doutores: list, tipos_exame: list) -> None:
+    limpar_tela()
+    print("-"*20, "Doutores", "-"*20)
+    print()
+    for i, tipo in enumerate(doutores):
+        for nomes, hora in tipo.items():
+            print(f"{nomes} - {tipos_exame[i]}")
 # ================= Menu Principal =================
 def menu():
-
     while True:
         limpar_tela()
         print("-"*10, "Menu Principal", "-"*10)
         print()
         print("1.Marcar consulta")
         print("2.Ver suas consultas")
-        print("3.Cancelar consulta")
-        print("4.Ver todos os Doutores")
+        print("3.Ver todos os Doutores")
         print()
         print("0.SAIR")
 
         opcao = input("Digite uma das opções:")
+
         match opcao:
             case "0":
                 limpar_tela()
@@ -332,7 +341,7 @@ def menu():
                 marcar_consulta()
             case "2":
                 ver_consulta()
-            case "4":
+            case "3":
                 mostrar_todos_doutores(doutores, tipos_exame)
             case _:
                 limpar_tela()
