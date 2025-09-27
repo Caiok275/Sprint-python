@@ -1,7 +1,7 @@
 import os
 
-# Váriavel que armazena o email do usuário após um login bem sucedido
-email_logado = ""
+# Váriavel que armazena o nome do usuário após um login bem sucedido
+usuario_logado = ""
 # Exames, doutores e horas disponíveis
 exame_geral = {
     "Dr.Ricardo" : ["6h00", "10h00", "14h00"],
@@ -38,44 +38,44 @@ def ler_arquivo(nm_arq: str) -> dict:
         pass  # Se não houver arquivo, apenas retorna vazio
     return dados
 
-# Recebe o endereço de email e senha e implementa no dicionario "usuario"
+# Recebe o nome do usuário e senha e o implementa no dicionario "usuario"
 def criar_usuario(arq_usuario: str ,usuario: dict) -> None:
     while True:
         limpar_tela()
-        email = solicitar_email(usuario) 
-        if email is None:
+        nome = solicitar_usuario(usuario) 
+        if nome is None:
             return  # Usuário optou por voltar
         senha = solicitar_senha()
         if senha is None:
             return # Usuário optou por voltar
-        pedir_confirmacao(email, senha)
+        pedir_confirmacao(nome, senha)
         confirmar = confirmar_dados()
         if confirmar == False:
             continue # Usuário decidiu refazer seu cadastro
-        usuario[email] = senha
+        usuario[nome] = senha
         input("\nUsuário cadastrado com sucesso! Pressione ENTER para continuar...\n")
         dicionario_para_txt(arq_usuario,usuario)
         break
 
-# Pergunta ao usuário seu email, e o retorna vazio caso digite 0
-def solicitar_email(usuario: dict) -> str | None:
+# Pergunta ao usuário seu nome e checa se o nome colocado já foi cadastrado antes
+def solicitar_usuario(usuario: dict) -> str | None:
     while True:
-        email = input("Digite seu Email ou pressione 0 para voltar: ")
-        if email == "0":
+        nome = input("Digite seu nome ou pressione 0 para voltar: ").strip()
+        if nome == "0":
             return
-        elif email in usuario:
+        elif nome in usuario:
             limpar_tela()
-            print("\nEste endereço de email já está cadastrado. Tente novamente.\n")
-        elif email == "":
+            print("\nEste nome já está cadastrado. Tente novamente.\n")
+        elif nome == "":
             limpar_tela()
-            print("É um endereço de Email para se cadastrar\n")
+            print("É obrigatorio escrever o seu nome")
         else:
-            return email
+            return nome
         
 # Pergunta o usuário uma senha e recusa senha "vazia"
 def solicitar_senha() -> str:
     while True:
-        senha = input("Digite uma senha:")
+        senha = input("Digite uma senha:").strip()
         if senha == "0":
             return
         elif senha == "":
@@ -86,9 +86,9 @@ def solicitar_senha() -> str:
             return senha
 
 # Pergunta se todos os dados inseridos estão de acordo
-def pedir_confirmacao(email: str, senha:str):
+def pedir_confirmacao(nome: str, senha:str):
     print("\nConfira os dados antes de registrar:")
-    print(f"Email: {email}")
+    print(f"Nome: {nome}")
     print(f"Senha: {senha}\n")
 
 # Pergunta se todos os dados estão corretos e retorna um valor boolean dependendo da resposta
@@ -109,33 +109,33 @@ def dicionario_para_txt(nm_arq: str, dicionario: dict) -> None:
         for key, value in dicionario.items():
             f.write(f"{key}:{value}\n")
 
-# Verifica se o email e senha condizem
+# Verifica se o nome e senha condizem
 def autentificacao(usuario: dict) -> bool:
     while True:
-        print("Digite seu Email e Senha ou digite 0 para cancelar:\n")
-        email = input("Email:")
-        if email == "0":
+        print("Digite seu nome e sua senha ou digite 0 para cancelar:\n")
+        nome = input("Nome:")
+        if nome == "0":
             break # Usuário optou por voltar
         senha = input("Senha:")
         if senha == "0":
             break # Usuário optou por voltar
-        liberado = conferir_credencial(usuario, email, senha)
+        liberado = conferir_credencial(usuario, nome, senha)
         if liberado == False:
             limpar_tela()
-            print("Senha ou Email incorreto!!!")
-            continue # Email e senha incorretos
+            print("Senha ou nome incorreto!!!")
+            continue # nome ou senha incorretos
         else:
-            # Atribui o Email autentificado na variável global email_logado e retorna o valor "True"
-            global email_logado
-            email_logado = email
+            # Atribui o nome autentificado na variável global usuario_logado e retorna o valor "True"
+            global usuario_logado
+            usuario_logado = nome
             limpar_tela()
             input("Login realizado com sucesso, pressione ENTER para continuar...")
             return True
 
 # Confere se a senha e o email está correto
-def conferir_credencial(usuario: dict, email: str, senha: str) -> bool:
-    for email_correto, senha_correta in usuario.items():
-        if email == email_correto and senha == senha_correta:
+def conferir_credencial(usuario: dict, nome: str, senha: str) -> bool:
+    for nome_correto, senha_correta in usuario.items():
+        if nome == nome_correto and senha == senha_correta:
             return True
     return False
 
@@ -218,7 +218,7 @@ def mostrar_horas(doutores: dict, dr_selecionado: dict):
     return escolher(horas, "Horas")
 
 # Pergunta ao usuário qual doutor ou hora (dependendo da aplicação) e retorna a opção digitada
-# Para utilizar esta função, coloque o dicionario que deseja utilizar e escreva o nome deste
+# Para utilizar esta função, coloque o dicionario que deseja utilizar e escreva o nome do
 # dicionário em formato string começando com letra maiuscula ex.(escolher(doutores, "Doutores"))
 def escolher(dicionario: dict, nome_dicionario: str):
     if nome_dicionario == "Doutores":
@@ -246,7 +246,7 @@ def marcar_consulta():
         if not horas_selecionadas:
             break
         consulta = {
-            "Usuário" : email_logado,
+            "Usuário" : usuario_logado,
             "Tipo de consulta" : tipos_exame[index_consulta],
             "Doutor" : dr_selecionado,
             "Hora" : horas_selecionadas
@@ -290,7 +290,7 @@ def ver_consulta():
         consulta = ler_arquivo(nm_arq)
         if not consulta:
             print("\nNão existe arquivo com este nome")
-        elif email_logado != consulta["Usuário"]:
+        elif usuario_logado != consulta["Usuário"]:
             print("A consulta gravada não pertence a esta conta, tente novamente.")
         else:
             exibir_consultas(consulta)
