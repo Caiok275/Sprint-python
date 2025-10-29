@@ -8,15 +8,18 @@ CREATE TABLE T_HCFMUSP_DOUTORES (
 CREATE TABLE T_HCFMUSP_PACIENTE (
     id_paciente INT GENERATED ALWAYS AS IDENTITY,
     nm_paciente VARCHAR2(80) NOT NULL,
+    senha VARCHAR2(20) NOT NULL,
     CONSTRAINT paciente_pk PRIMARY KEY (id_paciente)
 );
 
 CREATE TABLE T_HCFMUSP_CONSULTAS (
     id_consulta INT GENERATED ALWAYS AS IDENTITY,
-    nm_paciente VARCHAR2(80) NOT NULL,
+    id_paciente INT NOT NULL,
     id_doutor INT NOT NULL,
     dt_consulta DATE,
     CONSTRAINT consulta_pk PRIMARY KEY (id_consulta),
+    CONSTRAINT fk_paciente FOREIGN KEY (id_paciente)
+        REFERENCES T_HCFMUSP_PACIENTE (id_paciente),
     CONSTRAINT fk_doutor FOREIGN KEY (id_doutor)
         REFERENCES T_HCFMUSP_DOUTORES (id_doutor)
 );
