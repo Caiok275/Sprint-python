@@ -190,9 +190,9 @@ def agendar():
 
         limpar_tela()
         print(df)
-        id_doutor = int(input("{:.<25}:".format("Escolha um dos doutores ")))
+        id_doutor = int(input("Escolha um dos doutores "))
 
-        data_str = input("{:.<25}:".format("Digite a data e a hora da consulta (DD/MM/YYYY) ")).strip()
+        data_str = input("Digite a data e a hora da consulta (DD/MM/YYYY) ").strip()
 
         dt_consulta = datetime.strptime(data_str, "%d/%m/%Y")
         sql = """ INSERT INTO T_HCFMUSP_CONSULTAS (nm_paciente,id_doutor,dt_consulta)VALUES (:1,:2,:3)"""
