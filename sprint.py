@@ -1,24 +1,13 @@
 import os
 
+import json
+import oracledb
+import pandas as pd
+from datetime import datetime
+
 # Váriavel que armazena o nome do usuário após um login bem sucedido
 usuario_logado = ""
 # Exames, doutores e horas disponíveis
-exame_geral = {
-    "Dr.Ricardo" : ["6h00", "10h00", "14h00"],
-    "Dra.Maria" : ["8h00", "12h00", "16h00"]}
-
-exame_de_sangue = {
-    "Dr.Pedro" : ["8h00", "12h00", "16h00"],
-    "Dr.Ana" :  ["9h00", "13h00", "17h00"]}
-
-raioX = {
-    "Dr.Lucas": ["7h30", "11h30", "15h30"]}
-
-ultraSom = {
-    "Dr.Vitor" : ["6h00", "10h00", "14h00"],}
-
-doutores = [exame_geral, exame_de_sangue, raioX, ultraSom]
-tipos_exame = ["Exame geral", "Exame de sangue", "Raio-X", "UltraSom"]
 
 # ================= Funções =================
 
@@ -55,12 +44,24 @@ def criar_usuario(arq_usuario: str ,usuario: dict) -> None:
         usuario[nome] = senha
         input("\nUsuário cadastrado com sucesso! Pressione ENTER para continuar...\n")
         dicionario_para_txt(arq_usuario,usuario)
+        cadastrar_paciente(nome)
         break
+
+def cadastrar_paciente(nome:str):
+    try:
+        sql = """ INSERT INTO T_HCFMUSP_PACIENTE nm_paciente VALUES :1 """
+        inst_cadastro.execute(sql, (nome,))
+        conn.commit()
+    except:
+        print("Erro na transação do BD")
+    else:
+        # Caso haja sucesso na gravação
+        print("##### Dados GRAVADOS #####")
 
 # Pergunta ao usuário seu nome e checa se o nome colocado já foi cadastrado antes
 def solicitar_usuario(usuario: dict) -> str | None:
     while True:
-        nome = input("Digite seu nome ou pressione 0 para voltar: ").strip()
+        nome = input("Digite seu nome ou pressione 0 para voltar: ").strip().upper()
         if nome == "0":
             return
         elif nome in usuario:
@@ -113,7 +114,7 @@ def dicionario_para_txt(nm_arq: str, dicionario: dict) -> None:
 def autentificacao(usuario: dict) -> bool:
     while True:
         print("Digite seu nome e sua senha ou digite 0 para cancelar:\n")
-        nome = input("Nome:")
+        nome = input("Nome:").upper()
         if nome == "0":
             break # Usuário optou por voltar
         senha = input("Senha:")
@@ -173,136 +174,177 @@ def login():
                 input("Selecione uma opção valida! Pressione ENTER para continuar...")
 
 # ======== Funções do menu principal ========
-# Mostra todos os tipos de consulta
-def mostrar_tipos_consulta(tipos_exame: list) -> None:
-    limpar_tela()
-    print("-"*10, "Tipos de consulta","-"*10)
-    print()
-    for i, tipos in enumerate(tipos_exame, start=1):
-        print(f"{i}.{tipos}")
-    print()
-
-    return selecionar_consulta(tipos_exame)
-
-# Pergunta o tipo de consulta e retorna a opção para ser usado como index da lista doutores
-def selecionar_consulta(tipos_exame: list) -> int:
-    while True:
-        try:
-            opcao = int(input("Selecione uma das consultas:"))
-            if opcao < 1 or opcao > len(tipos_exame):
-                print("Esta opção não existe, tente novamente")
-            else:
-                return opcao -1
-        except (TypeError,ValueError):
-            input("Esta opção não existe, pressione ENTER para tentar novamente...")
-
-# Mostra apenas os doutores que realiza o tipo de consulta selecionada
-def mostrar_doutores(doutores: dict) -> str:
-    limpar_tela()
-    print("-"*10, "Doutores", "-"*10)
-    print()
-    for nome, horas in doutores.items():
-        print(f"{nome} - Horas disponíveis:", ", ".join(horas))
-    
-    return escolher(doutores, "Doutores")
-
-# Mostra as horas disponíveis
-def mostrar_horas(doutores: dict, dr_selecionado: dict):
-    limpar_tela()
-    horas = doutores[dr_selecionado]
-    print("-"*10, "Horas Disponíveis", "-"*10)
-    print()
-    print(", ".join(horas))
-    print()
-
-    return escolher(horas, "Horas")
-
-# Pergunta ao usuário qual doutor ou hora (dependendo da aplicação) e retorna a opção digitada
-# Para utilizar esta função, coloque o dicionario que deseja utilizar e escreva o nome do
-# dicionário em formato string começando com letra maiuscula ex.(escolher(doutores, "Doutores"))
-def escolher(dicionario: dict, nome_dicionario: str):
-    if nome_dicionario == "Doutores":
-        msg = "Escreva o nome de um dos doutores:"
-    else:
-        msg = "Escreva a hora da consulta:"
-    while True:
-        opcao = input(msg)
-        if opcao == "0":
-            limpar_tela()
-            print("Voltando ao menu principal")
-            return None
-        elif opcao not in dicionario:
-
-            print(f"{nome_dicionario} inválida, escreva exatamente como foi mostrado na tela")
-        else:
-            return opcao
-        
-# Pergunta ao usuário o tipo, o doutor e a hora da consulta e os junta em um dicionário consulta, caso todas as informações estejam satisfatórias, a consulta é gravada em um arquivo .txt
-def marcar_consulta():
-    while True:
-        index_consulta = mostrar_tipos_consulta(tipos_exame)
-        dr_selecionado = mostrar_doutores(doutores[index_consulta])
-        horas_selecionadas = mostrar_horas(doutores[index_consulta], dr_selecionado)
-        if not horas_selecionadas:
-            break
-        consulta = {
-            "Usuário" : usuario_logado,
-            "Tipo de consulta" : tipos_exame[index_consulta],
-            "Doutor" : dr_selecionado,
-            "Hora" : horas_selecionadas
-            }
+def agendar():
+    try:
         limpar_tela()
-        exibir_consultas(consulta)
-        confirmacao = confirmar_dados()
-        if confirmacao:
-            print("\nConsulta realizada com sucesso a consulta será gravada em um arquivo txt\n")
-            gravar_consulta(consulta)
-            break
-        else:
-            continue
+        print("----- Agendar Consulta -----")
+        # Recebe os valores para cadastro
+        global usuario_logado
+        nm_paciente = usuario_logado
 
-# Mostra o dicionário consulta de forma organizada
-def exibir_consultas(consulta: dict) -> None:
-    limpar_tela()
-    print("-"*10,"consulta","-"*10)
-    for key, value in consulta.items():
-        print(f"{key}: {value}")
-    print("-" * 30)
+        escolha = selecionar_tipos_consulta()
 
-# Pergunta ao usuário um nome para dar ao arquivo .txt e o grava caso não exista arquivo com este nome previamente
-def gravar_consulta(dicionario: dict) -> None:
-    while True:
-        try:
-            nm_arq = input("Digite um nome para o arquivo txt (não digite o nome com a extenção .txt):")
-            with open(nm_arq + ".txt", "x", encoding="utf-8") as f:
-                for key, value in dicionario.items():
-                    f.write(f"{key}:{value}\n")
-            print("Arquivo gravado com sucesso!")
-            break
-        except FileExistsError:
-            print("Um arquivo com este nome já existe, tente novamente")
-            continue # Já exste arquivo com este nome
-
-# Pergunta qual arquivo .txt o usuário gostaria de ver e caso o arquivo não pertença ao usuário, o arquivo o impede o arquivo de ser mostrado
-def ver_consulta():
-        nm_arq = input("\nEscreva o nome do arquivo a sua consulta foi salva (não escreva a extenção do arquivo):")
-        nm_arq = nm_arq + ".txt"
-        consulta = ler_arquivo(nm_arq)
-        if not consulta:
-            print("\nNão existe arquivo com este nome")
-        elif usuario_logado != consulta["Usuário"]:
-            print("A consulta gravada não pertence a esta conta, tente novamente.")
-        else:
-            exibir_consultas(consulta)
+        sql = """SELECT * FROM T_HCFMUSP_DOUTORES WHERE tipo_consulta = :1"""
         
-# Mostra todos os nomes dos doutores, seus tipos de consulta
-def mostrar_todos_doutores(doutores: list, tipos_exame: list) -> None:
+        df = listar_doutores(sql,escolha)
+
+        limpar_tela()
+        print(df)
+        id_doutor = int(input("{:.<25}:".format("Escolha um dos doutores ")))
+
+        data_str = input("{:.<25}:".format("Digite a data e a hora da consulta (DD/MM/YYYY) ")).strip()
+
+        dt_consulta = datetime.strptime(data_str, "%d/%m/%Y")
+        sql = """ INSERT INTO T_HCFMUSP_CONSULTAS (nm_paciente,id_doutor,dt_consulta)VALUES (:1,:2,:3)"""
+        inst_cadastro.execute(sql,(nm_paciente,id_doutor,dt_consulta))
+        conn.commit()
+
+    except ValueError:
+        print("Digite um valor válido!")
+    except:
+        print("Erro na transação do BD")
+    else:
+        # Caso haja sucesso na gravação
+        print("##### Dados GRAVADOS #####")
+
+def selecionar_tipos_consulta():
+    tipos_consulta = ["Exame Geral", "Exame de sangue", "Raio-X", "UltraSom"]
+    print("Selecione o tipo de consulta:")
+    for i, consulta in enumerate(tipos_consulta, start=1):
+        print(f"{i}. {consulta}")
+    try:
+        escolha = int(input("\nDigite o número da consulta desejada: "))
+        if escolha < 1 or escolha > len(tipos_consulta):
+            print("Opção inválida.")
+        else: 
+            return tipos_consulta[escolha - 1]
+        
+    except ValueError:
+        print("Digite um número")
+
+def mostrar_todos_doutores(): 
     limpar_tela()
-    print("-"*20, "Doutores", "-"*20)
-    print()
-    for i, tipo in enumerate(doutores):
-        for nomes, hora in tipo.items():
-            print(f"{nomes} - {tipos_exame[i]}")
+    sql = "SELECT * FROM T_HCFMUSP_DOUTORES"
+    df = listar_doutores(sql)
+    print("------ Doutores ------")
+    print(df)
+
+# funcao que lista todos os itens da tabela
+def listar_doutores(sql: str, parametro: str = None) -> str:  
+    lista_doutores = []  # Lista para captura de dados do Banco
+    try:
+        # Instrução SQL com base no que foi selecinado na tela de menu
+        if not parametro:
+            inst_consulta.execute(sql)
+        else:
+            inst_consulta.execute(sql,(parametro,))
+
+        # Captura todos os registros da tabela e armazena no objeto data
+        data = inst_consulta.fetchall()
+
+        # Insere os valores da tabela na Lista
+        for dt in data:
+            lista_doutores.append(dt)
+
+        # ordena a lista
+        lista_doutores = sorted(lista_doutores)
+
+        # Gera um DataFrame com os dados da lista utilizando o Pandas
+        dados_df = pd.DataFrame.from_records(
+            lista_doutores, columns=['id_doutor', 'nm_doutor', 'tipo_consulta'], index='id_doutor')
+        
+        # Verifica se não há registro através do dataframe
+        if dados_df.empty:
+            return "Nenhum doutor foi cadastrado"
+        else:
+            return dados_df
+        
+    except:
+        print("Erro na transação do BD")
+
+# funcao que lista todos os itens da tabela
+def listar_consultas() -> str:  
+    lista_consulta = []  # Lista para captura de dados do Banco
+    try:
+        global usuario_logado
+
+        inst_consulta.execute(f"SELECT * FROM T_HCFMUSP_CONSULTAS WHERE nm_paciente = {usuario_logado}")
+
+        # Captura todos os registros da tabela e armazena no objeto data
+        data = inst_consulta.fetchall()
+
+        # Insere os valores da tabela na Lista
+        for dt in data:
+            lista_consulta.append(dt)
+
+        # ordena a lista
+        lista_consulta = sorted(lista_consulta)
+
+        # Gera um DataFrame com os dados da lista utilizando o Pandas
+        dados_df = pd.DataFrame.from_records(
+            lista_consulta, columns=['id_consulta', 'id_paciente', 'id_doutor', 'dt_consulta'], index='id_consulta')
+        
+        # Verifica se não há registro através do dataframe
+        if dados_df.empty:
+            return "Nenhuma consulta foi registrada ainda"
+        else:
+            return dados_df
+    except ValueError:
+        print("Digite um valor válido!")
+    except:
+        print("Erro na transação do BD")
+
+# def editar_produto():
+#     try:
+#         id_prod = int(input("Qual id de produto iremos alterar? "))
+#         campos_validos = ['nm_produto', 'setor_produto', 'dt_vencimento', 'preco_produto', 'peso']
+
+#         campo_alterado = input(f"Qual campo deseja alterar ({', '.join(campos_validos)})? ").strip
+
+#         if campo_alterado not in campos_validos:
+#             print("Campo inválido!")
+#             return
+        
+#         valor_novo = input("Qual é o novo valor? ").strip()
+
+#         instrucao_sql = f"UPDATE T_PRODUTO SET :1 = :2 WHERE cod_produto = :3"
+
+#         inst_alteracao.execute(instrucao_sql, (campo_alterado, valor_novo, id_prod))
+#         print("Produto atualizado com sucesso.")
+
+#     except ValueError:
+#         print("Digite um valor válido!")
+#     except:
+#         print("Erro na transação do BD")
+
+def cancelar_consulta():
+    limpar_tela()
+    try:
+        print("----- Cancelar Consulta -----")
+        listar_consultas()
+        id_consulta = input("Digite a consulta que deseja cancelar:")
+        confirmacao = input(f"Tem certeza que quer apagar a consulta {id_consulta}? (Sim/Não)").strip().lower()
+        if confirmacao == "sim" or confirmacao == "s":
+            sql = f"DELETE FROM T_HCFMUSP_CONSULTA WHERE id_consulta=:1"
+            # Executa a instrução e atualiza a tabela
+            inst_exclusao.execute(sql, (id_consulta,))
+            conn.commit()
+            # Exibe mensagem caso haja sucesso
+            print("##### CONSULTA CANCELADA! #####")
+        else: 
+            print("Deleção cancelada!")
+    except:
+        print("Erro na transação do BD")
+
+def gerar_arquivo():
+    nm_arquivo = input("Digite um nome para o arquivo (não digite a extenção):").strip()
+    df = listar_consultas()
+    try:
+        with open(nm_arquivo + ".json", "x") as f:
+            json.dump(df, f, indent=4)
+    except FileExistsError:
+        print("Um arquivo com este nome já existe, tente novamente...")
+
 # ================= Menu Principal =================
 def menu():
     while True:
@@ -312,6 +354,8 @@ def menu():
         print("1.Marcar consulta")
         print("2.Ver suas consultas")
         print("3.Ver todos os Doutores")
+        print("4.Gravar consulta em um arquivo json")
+        print("5.CANCELAR Consulta")
         print()
         print("0.SAIR")
 
@@ -319,24 +363,45 @@ def menu():
 
         match opcao:
             case "0":
-                limpar_tela()
-                print("Finalizando o código...")
+                sair()
                 break
             case "1":
-                marcar_consulta()
+                agendar()
             case "2":
-                ver_consulta()
+                listar_consultas()
             case "3":
-                mostrar_todos_doutores(doutores, tipos_exame)
+                mostrar_todos_doutores()
+            case "4":
+                gerar_arquivo()
+            case "5":
+                cancelar_consulta()
             case _:
                 limpar_tela()
                 print("Selecione uma opção valida!")
         input("Pressione ENTER para continuar...")
 
-# ================= Execução =================
-login = login()
-if login == True:
+def sair():
+    global conexao
+    limpar_tela()
+    print("Obrigado por utilizar o nosso código")
+    conexao = False
 
-    menu()
+# ================= Conexão =================
+try :
+    conn = oracledb.connect(user = "rm562979",password = "251004",dsn = "oracle.fiap.com.br:1521/ORCL")
+    inst_cadastro = conn.cursor()
+    inst_consulta = conn.cursor()
+    inst_alteracao = conn.cursor()
+    inst_exclusao= conn.cursor()
 
+except Exception as e:
+    print(e)
+    conexao=False
+else:
+    conexao=True
+
+while conexao:
+    login = login()
+    if login == True:
+        menu()
 
