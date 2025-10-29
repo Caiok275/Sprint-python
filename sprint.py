@@ -44,19 +44,7 @@ def criar_usuario(arq_usuario: str ,usuario: dict) -> None:
         usuario[nome] = senha
         input("\nUsuário cadastrado com sucesso! Pressione ENTER para continuar...\n")
         dicionario_para_txt(arq_usuario,usuario)
-        cadastrar_paciente(nome)
         break
-
-def cadastrar_paciente(nome:str):
-    try:
-        sql = """ INSERT INTO T_HCFMUSP_PACIENTE nm_paciente VALUES :1 """
-        inst_cadastro.execute(sql, (nome,))
-        conn.commit()
-    except:
-        print("Erro na transação do BD")
-    else:
-        # Caso haja sucesso na gravação
-        print("##### Dados GRAVADOS #####")
 
 # Pergunta ao usuário seu nome e checa se o nome colocado já foi cadastrado antes
 def solicitar_usuario(usuario: dict) -> str | None:
@@ -208,6 +196,12 @@ def agendar():
             # Caso haja sucesso na gravação
             print("##### Dados GRAVADOS #####")
 
+def mostrar_suas_consultas():
+    limpar_tela()
+    df = listar_consultas()
+    print("------ Suas Consultas ------")
+    print(df)
+
 def selecionar_tipos_consulta():
     tipos_consulta = ["Exame Geral", "Exame de sangue", "Raio-X", "UltraSom"]
     print("Selecione o tipo de consulta:")
@@ -283,7 +277,7 @@ def listar_consultas() -> str:
 
         # Gera um DataFrame com os dados da lista utilizando o Pandas
         dados_df = pd.DataFrame.from_records(
-            lista_consulta, columns=['id_consulta', 'id_paciente', 'id_doutor', 'dt_consulta'], index='id_consulta')
+            lista_consulta, columns=['id_consulta', 'nm_paciente', 'id_doutor', 'dt_consulta'], index='id_consulta')
         
         # Verifica se não há registro através do dataframe
         if dados_df.empty:
@@ -367,8 +361,7 @@ def menu():
             case "1":
                 agendar()
             case "2":
-                df = listar_consultas()
-                print(df)
+                mostrar_suas_consultas()
             case "3":
                 remarcar_consulta()
             case "4":
