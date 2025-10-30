@@ -196,12 +196,6 @@ def agendar():
             # Caso haja sucesso na gravação
             print("##### Dados GRAVADOS #####")
 
-def mostrar_suas_consultas():
-    limpar_tela()
-    df = listar_consultas()
-    print("------ Suas Consultas ------")
-    print(df)
-
 def selecionar_tipos_consulta():
     tipos_consulta = ["Exame Geral", "Exame de sangue", "Raio-X", "UltraSom"]
     print("Selecione o tipo de consulta:")
@@ -257,13 +251,22 @@ def listar_doutores(sql: str, parametro: str = None) -> str:
     except:
         print("Erro na transação do BD")
 
+def mostrar_consultas() -> None:
+    global usuario_logado
+    sql = f"SELECT * FROM T_HCFMUSP_CONSULTAS WHERE nm_paciente = :1"
+    parametro = usuario_logado
+    df = listar_consultas(sql,parametro)
+    if df.Empty:    
+        print("Nenhuma consulta para remarcar")
+    print(df)
+
 # funcao que lista todos os itens da tabela
-def listar_consultas() -> str:  
+def listar_consultas(sql: str, parametro: str) -> str:  
     lista_consulta = []  # Lista para captura de dados do Banco
     try:
         global usuario_logado
 
-        inst_consulta.execute(f"SELECT * FROM T_HCFMUSP_CONSULTAS WHERE nm_paciente = '{usuario_logado}'")
+        inst_consulta.execute(sql,(parametro,))
 
         # Captura todos os registros da tabela e armazena no objeto data
         data = inst_consulta.fetchall()
@@ -294,15 +297,11 @@ def remarcar_consulta():
         try:
             limpar_tela()
             print("----- Remarcar Consulta -----")
-            df = listar_consultas()
-            if df.Empty:
-                print("Nenhuma consulta para remarcar")
-                break
-            print(df)
+            mostrar_consultas()
             id_consulta = input("Digite a consulta que deseja remarcar:")
             data_str = input("Digite a nova data e hora da consulta (DD/MM/YYYY) ").strip()
             dt_consulta = datetime.strptime(data_str, "%d/%m/%Y")
-            sql = f""" UPDATE T_HCFMUSP_CONSULTAS SET dt_consulta = :1 WHERE id_consulta = :2 """
+            sql = """ UPDATE T_HCFMUSP_CONSULTAS SET dt_consulta = :1 WHERE id_consulta = :2 """
             inst_alteracao.execute(sql, (dt_consulta,id_consulta))
             conn.commit()
         except ValueError:
@@ -317,8 +316,7 @@ def cancelar_consulta():
     limpar_tela()
     try:
         print("----- Cancelar Consulta -----")
-        df = listar_consultas()
-        print(df)
+        mostrar_consultas()
         id_consulta = input("Digite a consulta que deseja cancelar:")
         confirmacao = input(f"Tem certeza que quer apagar a consulta {id_consulta}? (Sim/Não)").strip().lower()
         if confirmacao == "sim" or confirmacao == "s":
@@ -335,7 +333,7 @@ def cancelar_consulta():
 
 def gerar_arquivo():
     nm_arquivo = input("Digite um nome para o arquivo (não digite a extenção):").strip()
-    df = listar_consultas()
+
 
 # ================= Menu Principal =================
 def menu():
@@ -361,7 +359,7 @@ def menu():
             case "1":
                 agendar()
             case "2":
-                mostrar_suas_consultas()
+                mostrar_consultas()
             case "3":
                 remarcar_consulta()
             case "4":
