@@ -166,27 +166,43 @@ def agendar():
     while True:
         try:
             limpar_tela()
-            print("----- Agendar Consulta -----")
+            print("-"*10, "Agendar Consulta", "-"*10)
             # Recebe os valores para cadastro
             global usuario_logado
             nm_paciente = usuario_logado
 
             escolha = selecionar_tipos_consulta()
-
+            if escolha is None:
+                input("Digite um valor válido! pressione ENTER para continuar...")
+                continue
+            elif escolha == "0":
+                print("Gendamento cancelado!")
+                break
+            
             sql = """SELECT * FROM T_HCFMUSP_DOUTORES WHERE tipo_consulta = :1"""
             
             df = listar_doutores(sql,escolha)
 
             limpar_tela()
             print(df)
-            id_doutor = int(input("Escolha um dos doutores "))
+            id_doutor = int(input("Escolha um dos doutores (digite o ID):"))
+            if id_doutor not in df.index:
+                print("ID inválido!")
+                continue
+            elif id_doutor == 0:
+                print("Gendamento cancelado!")
+                break
 
-            data_str = input("Digite a data e a hora da consulta (DD/MM/YYYY) ").strip()
+            data_str = input("Digite a data e a hora da consulta (DD/MM/YYYY):").strip()
+            if data_str == "0":
+                print("Gendamento cancelado!")
+                break
 
             dt_consulta = datetime.strptime(data_str, "%d/%m/%Y")
             sql = """ INSERT INTO T_HCFMUSP_CONSULTAS (nm_paciente,id_doutor,dt_consulta)VALUES (:1,:2,:3)"""
             inst_cadastro.execute(sql,(nm_paciente,id_doutor,dt_consulta))
             conn.commit()
+            break
 
         except ValueError:
             print("Digite um valor válido!")
@@ -196,26 +212,34 @@ def agendar():
             # Caso haja sucesso na gravação
             print("##### Dados GRAVADOS #####")
 
-def selecionar_tipos_consulta():
+def mostrar_suas_consultas():
+    limpar_tela()
+    df = listar_consultas()
+    print("-"*10, "Suas Consultas", "-"*10)
+    print(df)
+
+def selecionar_tipos_consulta() -> str | None:
     tipos_consulta = ["Exame Geral", "Exame de sangue", "Raio-X", "UltraSom"]
     print("Selecione o tipo de consulta:")
     for i, consulta in enumerate(tipos_consulta, start=1):
         print(f"{i}. {consulta}")
     try:
-        escolha = int(input("\nDigite o número da consulta desejada: "))
+        escolha = int(input("\nDigite o número da consulta desejada ou 0 para cancelar: "))
         if escolha < 1 or escolha > len(tipos_consulta):
-            print("Opção inválida.")
+            return None
+        elif escolha == 0:
+            return "0"
         else: 
             return tipos_consulta[escolha - 1]
         
     except ValueError:
         print("Digite um número")
 
-def mostrar_todos_doutores(): 
+def mostrar_todos_doutores() -> None: 
     limpar_tela()
     sql = "SELECT * FROM T_HCFMUSP_DOUTORES"
     df = listar_doutores(sql)
-    print("------ Doutores ------")
+    print("-"*10, "Doutores", "-"*10)
     print(df)
 
 # funcao que lista todos os itens da tabela
@@ -251,72 +275,61 @@ def listar_doutores(sql: str, parametro: str = None) -> str:
     except:
         print("Erro na transação do BD")
 
-def mostrar_consultas() -> None:
-    global usuario_logado
-    sql = f"SELECT * FROM T_HCFMUSP_CONSULTAS WHERE nm_paciente = :1"
-    parametro = usuario_logado
-    df = listar_consultas(sql,parametro)
-    if df.Empty:    
-        print("Nenhuma consulta para remarcar")
-    print(df)
-
 # funcao que lista todos os itens da tabela
-def listar_consultas(sql: str, parametro: str) -> str:  
+def listar_consultas() -> str:  
     lista_consulta = []  # Lista para captura de dados do Banco
-    try:
-        global usuario_logado
+    #try:
+    global usuario_logado
+    inst_consulta.execute(F"""SELECT c.id_consulta, c.nm_paciente, d.nm_doutor, d.tipo_consulta, c.dt_consulta FROM T_HCFMUSP_CONSULTAS c JOIN T_HCFMUSP_DOUTORES d ON c.id_doutor = d.id_doutor WHERE c.nm_paciente ='{usuario_logado}' """)
+    # Captura todos os registros da tabela e armazena no objeto data
+    data = inst_consulta.fetchall()
+    # Insere os valores da tabela na Lista
+    for dt in data:
+        lista_consulta.append(dt)
+    # ordena a lista
+    lista_consulta = sorted(lista_consulta)
+    # Gera um DataFrame com os dados da lista utilizando o Pandas
+    dados_df = pd.DataFrame.from_records(
+        lista_consulta, columns=["id_consulta", "nm_paciente", "nm_doutor", "tipo_consulta", "dt_consulta"],index="id_consulta")
+    
+    # Verifica se não há registro através do dataframe
+    if dados_df.empty:
+        return "Nenhuma consulta foi registrada ainda"
+    else:
+        return dados_df
+    # except ValueError:
+    #     print("Digite um valor válido!")
+    # except:
+    #     print("Erro na transação do BD")
 
-        inst_consulta.execute(sql,(parametro,))
-
-        # Captura todos os registros da tabela e armazena no objeto data
-        data = inst_consulta.fetchall()
-
-        # Insere os valores da tabela na Lista
-        for dt in data:
-            lista_consulta.append(dt)
-
-        # ordena a lista
-        lista_consulta = sorted(lista_consulta)
-
-        # Gera um DataFrame com os dados da lista utilizando o Pandas
-        dados_df = pd.DataFrame.from_records(
-            lista_consulta, columns=['id_consulta', 'nm_paciente', 'id_doutor', 'dt_consulta'], index='id_consulta')
-        
-        # Verifica se não há registro através do dataframe
-        if dados_df.empty:
-            return "Nenhuma consulta foi registrada ainda"
-        else:
-            return dados_df
-    except ValueError:
-        print("Digite um valor válido!")
-    except:
-        print("Erro na transação do BD")
-
-def remarcar_consulta():
+def remarcar_consulta() -> None:
     while True:
         try:
             limpar_tela()
-            print("----- Remarcar Consulta -----")
-            mostrar_consultas()
+            print("-"*10, "Remarcar Consulta", "-"*10)
+            df = listar_consultas()
+            print(df)
             id_consulta = input("Digite a consulta que deseja remarcar:")
-            data_str = input("Digite a nova data e hora da consulta (DD/MM/YYYY) ").strip()
+            data_str = input("Digite a nova data e hora da consulta (DD/MM/YYYY):").strip()
             dt_consulta = datetime.strptime(data_str, "%d/%m/%Y")
-            sql = """ UPDATE T_HCFMUSP_CONSULTAS SET dt_consulta = :1 WHERE id_consulta = :2 """
-            inst_alteracao.execute(sql, (dt_consulta,id_consulta))
+            sql = f""" UPDATE T_HCFMUSP_CONSULTAS SET dt_consulta = :1 WHERE id_consulta = :2 """
+            # Executa a instrução e atualiza a tabela
+            inst_alteracao.execute(sql,(dt_consulta,id_consulta))
             conn.commit()
+            # Exibe mensagem caso haja sucesso
+            print("##### CONSULTA REMARCADA! #####")
+            break
         except ValueError:
             print("Digite um valor válido!")
         except:
             print("Erro na transação do BD")
-        else:
-            # Caso haja sucesso na gravação
-            print("##### CONSULTA REMARCADA #####")
 
-def cancelar_consulta():
+def cancelar_consulta() -> None:
     limpar_tela()
     try:
-        print("----- Cancelar Consulta -----")
-        mostrar_consultas()
+        print("-"*10, "Cancelar Consulta", "-"*10)
+        df = listar_consultas()
+        print(df)
         id_consulta = input("Digite a consulta que deseja cancelar:")
         confirmacao = input(f"Tem certeza que quer apagar a consulta {id_consulta}? (Sim/Não)").strip().lower()
         if confirmacao == "sim" or confirmacao == "s":
@@ -331,9 +344,33 @@ def cancelar_consulta():
     except:
         print("Erro na transação do BD")
 
-def gerar_arquivo():
-    nm_arquivo = input("Digite um nome para o arquivo (não digite a extenção):").strip()
+def trasformar_df_dicionario(df: pd.DataFrame) -> dict:
+    dicionario = {}
+    for i, coluna in df.iterrows():
+        dicionario[i] = {
+            "id_consulta": i,
+            "nm_paciente": coluna["nm_paciente"],
+            "nm_doutor": coluna["nm_doutor"],
+            "tipo_consulta": coluna["tipo_consulta"],
+            "dt_consulta": coluna["dt_consulta"].strftime("%d/%m/%Y %H:%M:%S")
+        }
 
+    return dicionario
+
+def gerar_arquivo() -> None:
+    nm_arquivo = input("Digite um nome para o arquivo (não digite a extenção):").strip()
+    df = listar_consultas()
+    dictionario = trasformar_df_dicionario(df)
+
+    if df.empty:
+        print("Nenhuma consulta para salvar")
+    else:
+        try:
+            with open(nm_arquivo + ".json", "x", encoding="utf-8") as f:
+                json.dump(dictionario, f, indent=4, ensure_ascii=False)
+            print("Arquivo criado com sucesso!")
+        except FileExistsError:
+            print("Arquivo já existe, escolha outro nome")
 
 # ================= Menu Principal =================
 def menu():
@@ -343,7 +380,7 @@ def menu():
         print()
         print("1.Marcar consulta")
         print("2.Ver suas consultas")
-        print("3. Remarcar consulta")
+        print("3.Remarcar consulta")
         print("4.Ver todos os Doutores")
         print("5.Gravar consulta em um arquivo json")
         print("6.CANCELAR Consulta")
@@ -359,7 +396,7 @@ def menu():
             case "1":
                 agendar()
             case "2":
-                mostrar_consultas()
+                mostrar_suas_consultas()
             case "3":
                 remarcar_consulta()
             case "4":
