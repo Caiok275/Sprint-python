@@ -3,6 +3,7 @@ import os
 import json
 import oracledb
 import pandas as pd
+import requests
 from datetime import datetime
 
 # Váriavel que armazena o nome do usuário após um login bem sucedido
@@ -199,18 +200,18 @@ def agendar():
                 break
 
             dt_consulta = datetime.strptime(data_str, "%d/%m/%Y")
-            sql = """ INSERT INTO T_HCFMUSP_CONSULTAS (nm_paciente,id_doutor,dt_consulta)VALUES (:1,:2,:3)"""
-            inst_cadastro.execute(sql,(nm_paciente,id_doutor,dt_consulta))
+
+            cep = api_cep()
+            sql = """ INSERT INTO T_HCFMUSP_CONSULTAS (nm_paciente,id_doutor,dt_consulta,cep)VALUES (:1,:2,:3,:4) """
+            inst_cadastro.execute(sql,(nm_paciente,id_doutor,dt_consulta,cep))
             conn.commit()
+            print("##### Dados GRAVADOS #####")
             break
 
         except ValueError:
             print("Digite um valor válido!")
         except:
             print("Erro na transação do BD")
-        else:
-            # Caso haja sucesso na gravação
-            print("##### Dados GRAVADOS #####")
 
 def mostrar_suas_consultas():
     limpar_tela()
@@ -280,7 +281,7 @@ def listar_consultas() -> str:
     lista_consulta = []  # Lista para captura de dados do Banco
     #try:
     global usuario_logado
-    inst_consulta.execute(F"""SELECT c.id_consulta, c.nm_paciente, d.nm_doutor, d.tipo_consulta, c.dt_consulta FROM T_HCFMUSP_CONSULTAS c JOIN T_HCFMUSP_DOUTORES d ON c.id_doutor = d.id_doutor WHERE c.nm_paciente ='{usuario_logado}' """)
+    inst_consulta.execute(F"""SELECT c.id_consulta, c.nm_paciente, d.nm_doutor, d.tipo_consulta, c.dt_consulta, c.cep FROM T_HCFMUSP_CONSULTAS c JOIN T_HCFMUSP_DOUTORES d ON c.id_doutor = d.id_doutor WHERE c.nm_paciente ='{usuario_logado}' """)
     # Captura todos os registros da tabela e armazena no objeto data
     data = inst_consulta.fetchall()
     # Insere os valores da tabela na Lista
@@ -290,7 +291,7 @@ def listar_consultas() -> str:
     lista_consulta = sorted(lista_consulta)
     # Gera um DataFrame com os dados da lista utilizando o Pandas
     dados_df = pd.DataFrame.from_records(
-        lista_consulta, columns=["id_consulta", "nm_paciente", "nm_doutor", "tipo_consulta", "dt_consulta"],index="id_consulta")
+        lista_consulta, columns=["id_consulta", "nm_paciente", "nm_doutor", "tipo_consulta", "dt_consulta", "cep"],index="id_consulta")
     
     # Verifica se não há registro através do dataframe
     if dados_df.empty:
@@ -352,7 +353,8 @@ def trasformar_df_dicionario(df: pd.DataFrame) -> dict:
             "nm_paciente": coluna["nm_paciente"],
             "nm_doutor": coluna["nm_doutor"],
             "tipo_consulta": coluna["tipo_consulta"],
-            "dt_consulta": coluna["dt_consulta"].strftime("%d/%m/%Y %H:%M:%S")
+            "dt_consulta": coluna["dt_consulta"].strftime("%d/%m/%Y %H:%M:%S"),
+            "cep": coluna["cep"]
         }
 
     return dicionario
@@ -371,6 +373,14 @@ def gerar_arquivo() -> None:
             print("Arquivo criado com sucesso!")
         except FileExistsError:
             print("Arquivo já existe, escolha outro nome")
+
+# ================= API =================
+def api_cep() -> list:
+    requisicao = requests.get("https://cep.awesomeapi.com.br/json/01001000")
+    requisicao_dict = requisicao.json()
+    cep = requisicao_dict["cep"]
+
+    return cep
 
 # ================= Menu Principal =================
 def menu():
