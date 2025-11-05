@@ -546,4 +546,5 @@ while conexao:
     if login == True:
         menu()
 
-# TODO Validação de dados caso o df esteja vazio, consertar a consulta Ultrasom
+
+# TODO Validação de dados caso o df esteja vazio, consertar a consulta Ultrasom e impedir o usuário de agendar uma consulta no passado
