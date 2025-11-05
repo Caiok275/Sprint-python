@@ -43,8 +43,8 @@ def criar_usuario(arq_usuario: str ,usuario: dict) -> None:
         if senha is None:
             return # Usuário optou por voltar
         pedir_confirmacao(nome, senha)
-        confirmar = confirmar()
-        if confirmar == False:
+        confirmacao = confirmar()
+        if confirmacao == False:
             continue # Usuário decidiu refazer seu cadastro
         usuario[nome] = senha
         input("\nUsuário cadastrado com sucesso! Pressione ENTER para continuar...\n")
@@ -207,14 +207,14 @@ def escolha_tipo_consulta() -> str | bool:
         try:
             escolha = int(input("\nDigite o número da consulta desejada: "))
             if escolha < 1 or escolha > len(tipos_consulta):
-                print("Escolha inválida. Tente novamente.")
+                input("Escolha inválida, pressione ENTER para continuar...")
                 continue
             elif escolha == 0:
                 return escolha
             else:
                 return tipos_consulta[escolha - 1]
         except ValueError:
-            print("Digite um número")
+            input("Digite um número, pressione ENTER para continuar...")
 
 def escolher_doutor(consulta_selecionada: str) -> str:
     limpar_tela()
@@ -230,13 +230,13 @@ def escolher_doutor(consulta_selecionada: str) -> str:
             if escolha == 0:
                 return escolha
             elif escolha not in df.index:
-                print("ID inválido. Tente novamente.")
+                input("ID inválido, pressione ENTER para continuar...")
                 continue
             else:
                 return escolha
             
         except ValueError:
-            print("Digite um valor válido!")
+            input("Digite um valor válido! pressione ENTER para continuar...")
 
 def escolher_data_hora_consulta() -> str:
     while True:
@@ -250,7 +250,7 @@ def escolher_data_hora_consulta() -> str:
             return hora_str
         data_hora = transformar_data_hora(data_str, hora_str)
         if data_hora is None:
-            print("Data ou hora inválida. Tente novamente.")
+            input("Data ou hora inválida. pressione ENTER para continuar...")
             continue
         return data_hora
     
@@ -262,7 +262,7 @@ def data_consulta() -> datetime:
                 return data_str
             return data_str
         except ValueError:
-            print("Formato de data inválido. Tente novamente.")
+            input("Formato de data inválido. pressione ENTER para continuar....")
 
 def hora_consulta() -> str:
     while True:
@@ -272,7 +272,7 @@ def hora_consulta() -> str:
                 return hora_str
             return hora_str
         except ValueError:
-            print("Hora inválida. Tente novamente.")
+            input("Hora inválida. pressione ENTER para continuar...")
 
 def transformar_data_hora(data_str: str, hora_str: str) -> datetime:
     data_str += "-" + hora_str
@@ -281,7 +281,8 @@ def transformar_data_hora(data_str: str, hora_str: str) -> datetime:
         return dt_consulta
     
     except ValueError:
-        print("Formato de data e hora inválido. Certifique-se de usar DD/MM/YYYY para data e HH:MM para hora.")
+        print("Formato de data e hora inválido. Certifique-se de usar DD/MM/YYYY para data e HH:MM para hora")
+        input("Pressione ENTER para continuar...")
         return None
 
 def inserir_dados_consulta(nm_paciente: str, id_doutor: str, dt_consulta: datetime, cep: str) -> bool:
@@ -545,3 +546,4 @@ while conexao:
     if login == True:
         menu()
 
+# TODO Validação de dados caso o df esteja vazio, consertar a consulta Ultrasom
