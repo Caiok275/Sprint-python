@@ -28,6 +28,10 @@ def ler_arquivo(nm_arq: str) -> dict:
         pass  # Se não houver arquivo, apenas retorna vazio
     return dados
 
+def pegar_usuario_logado() -> str:
+    global usuario_logado
+    return usuario_logado
+
 # Recebe o nome do usuário e senha e o implementa no dicionario "usuario"
 def criar_usuario(arq_usuario: str ,usuario: dict) -> None:
     while True:
@@ -39,7 +43,7 @@ def criar_usuario(arq_usuario: str ,usuario: dict) -> None:
         if senha is None:
             return # Usuário optou por voltar
         pedir_confirmacao(nome, senha)
-        confirmar = confirmar_dados()
+        confirmar = confirmar()
         if confirmar == False:
             continue # Usuário decidiu refazer seu cadastro
         usuario[nome] = senha
@@ -80,11 +84,12 @@ def pedir_confirmacao(nome: str, senha:str):
     print("\nConfira os dados antes de registrar:")
     print(f"Nome: {nome}")
     print(f"Senha: {senha}\n")
+    print("Os dados estão corretos?")
 
 # Pergunta se todos os dados estão corretos e retorna um valor boolean dependendo da resposta
-def confirmar_dados() -> bool:
+def confirmar() -> bool:
     while True:
-        confirmacao = input("Os dados estão corretos? (sim/não): ").strip().lower()
+        confirmacao = input("Digite 'Sim' ou 'Não': ").strip().lower()
         if confirmacao in ("sim", "s"):
             return True
         elif confirmacao in ("não", "nao", "n"):
@@ -163,78 +168,138 @@ def login():
                 input("Selecione uma opção valida! Pressione ENTER para continuar...")
 
 # ======== Funções do menu principal ========
-def agendar():
+def agendar() -> None:
+    limpar_tela()
+
+    print("-"*10, "Agendar Consulta", "-"*10)
+
+    nm_paciente = pegar_usuario_logado()
+    escolha = escolha_tipo_consulta()
+    if escolha == "0":
+        print("Gendamento cancelado!")
+        return
+    
+    id_doutor = escolher_doutor(escolha)
+    if id_doutor is "0":
+        print("Gendamento cancelado!")
+        return
+    
+    dt_consulta = escolher_data_hora_consulta()
+    if dt_consulta == "0":
+        print("Gendamento cancelado!")
+        return
+    
+    cep = api_cep()
+
+    gravado = inserir_dados_consulta(nm_paciente,id_doutor,dt_consulta,cep)
+    if gravado == True:
+        print("##### CONSULTA AGENDADA COM SUCESSO! #####")
+    else:
+        print("ERRO AO AGENDAR CONSULTA!")
+        
+def escolha_tipo_consulta() -> str | bool:
+    tipos_consulta = ["Exame Geral", "Exame de sangue", "Raio-X", "UltraSom"]
+    print("Selecione o tipo de consulta:")
+    for i, consulta in enumerate(tipos_consulta, start=1):
+        print(f"{i}. {consulta}")
+
     while True:
         try:
-            limpar_tela()
-            print("-"*10, "Agendar Consulta", "-"*10)
-            # Recebe os valores para cadastro
-            global usuario_logado
-            nm_paciente = usuario_logado
-
-            escolha = selecionar_tipos_consulta()
-            if escolha is None:
-                input("Digite um valor válido! pressione ENTER para continuar...")
+            escolha = int(input("\nDigite o número da consulta desejada: "))
+            if escolha < 1 or escolha > len(tipos_consulta):
+                print("Escolha inválida. Tente novamente.")
                 continue
-            elif escolha == "0":
-                print("Gendamento cancelado!")
-                break
-            
-            sql = """SELECT * FROM T_HCFMUSP_DOUTORES WHERE tipo_consulta = :1"""
-            
-            df = listar_doutores(sql,escolha)
+            elif escolha == 0:
+                return escolha
+            else:
+                return tipos_consulta[escolha - 1]
+        except ValueError:
+            print("Digite um número")
 
-            limpar_tela()
-            print(df)
-            id_doutor = int(input("Escolha um dos doutores (digite o ID):"))
-            if id_doutor not in df.index:
-                print("ID inválido!")
+def escolher_doutor(consulta_selecionada: str) -> str:
+    limpar_tela()
+    sql = f"""SELECT * FROM T_HCFMUSP_DOUTORES WHERE tipo_consulta = :1"""
+    df = listar_doutores(sql,consulta_selecionada)
+    while True:
+        limpar_tela()
+        print("-"*10, "Doutores", "-"*10)
+        print(df)
+
+        try:
+            escolha = int(input("Escolha um dos doutores (digite o ID) ou digite 0 para voltar:"))
+            if escolha == 0:
+                return escolha
+            elif escolha not in df.index:
+                print("ID inválido. Tente novamente.")
                 continue
-            elif id_doutor == 0:
-                print("Gendamento cancelado!")
-                break
-
-            data_str = input("Digite a data e a hora da consulta (DD/MM/YYYY):").strip()
-            if data_str == "0":
-                print("Gendamento cancelado!")
-                break
-
-            dt_consulta = datetime.strptime(data_str, "%d/%m/%Y")
-
-            cep = api_cep()
-            sql = """ INSERT INTO T_HCFMUSP_CONSULTAS (nm_paciente,id_doutor,dt_consulta,cep)VALUES (:1,:2,:3,:4) """
-            inst_cadastro.execute(sql,(nm_paciente,id_doutor,dt_consulta,cep))
-            conn.commit()
-            print("##### Dados GRAVADOS #####")
-            break
-
+            else:
+                return escolha
+            
         except ValueError:
             print("Digite um valor válido!")
-        except:
-            print("Erro na transação do BD")
+
+def escolher_data_hora_consulta() -> str:
+    while True:
+        limpar_tela()
+        print("-"*10, "Data e Hora da Consulta", "-"*10)
+        data_str = data_consulta()
+        if data_str == "0":
+            return data_str
+        hora_str = hora_consulta()
+        if hora_str == "0":
+            return hora_str
+        data_hora = transformar_data_hora(data_str, hora_str)
+        if data_hora is None:
+            print("Data ou hora inválida. Tente novamente.")
+            continue
+        return data_hora
+    
+def data_consulta() -> datetime:
+    while True:
+        try:
+            data_str = input("Digite a data da consulta (DD/MM/YYYY) ou digite 0 para cancelar:").strip()
+            if data_str == "0":
+                return data_str
+            return data_str
+        except ValueError:
+            print("Formato de data inválido. Tente novamente.")
+
+def hora_consulta() -> str:
+    while True:
+        try:
+            hora_str = input("Digite a hora da consulta (HH:MM) ou digite 0 para cancelar:").strip()
+            if hora_str == "0":
+                return hora_str
+            return hora_str
+        except ValueError:
+            print("Hora inválida. Tente novamente.")
+
+def transformar_data_hora(data_str: str, hora_str: str) -> datetime:
+    data_str += "-" + hora_str
+    try:
+        dt_consulta = datetime.strptime(data_str, "%d/%m/%Y-%H:%M")
+        return dt_consulta
+    
+    except ValueError:
+        print("Formato de data e hora inválido. Certifique-se de usar DD/MM/YYYY para data e HH:MM para hora.")
+        return None
+
+def inserir_dados_consulta(nm_paciente: str, id_doutor: str, dt_consulta: datetime, cep: str) -> bool:
+    gravado = False
+    try:
+        sql = """ INSERT INTO T_HCFMUSP_CONSULTAS (nm_paciente,id_doutor,dt_consulta,cep)VALUES (:1,:2,:3,:4) """
+        inst_cadastro.execute(sql,(nm_paciente,id_doutor,dt_consulta,cep))
+        conn.commit()
+        gravado = True
+        return gravado
+    except:
+        return gravado
 
 def mostrar_suas_consultas():
     limpar_tela()
     df = listar_consultas()
     print("-"*10, "Suas Consultas", "-"*10)
     print(df)
-
-def selecionar_tipos_consulta() -> str | None:
-    tipos_consulta = ["Exame Geral", "Exame de sangue", "Raio-X", "UltraSom"]
-    print("Selecione o tipo de consulta:")
-    for i, consulta in enumerate(tipos_consulta, start=1):
-        print(f"{i}. {consulta}")
-    try:
-        escolha = int(input("\nDigite o número da consulta desejada ou 0 para cancelar: "))
-        if escolha < 1 or escolha > len(tipos_consulta):
-            return None
-        elif escolha == 0:
-            return "0"
-        else: 
-            return tipos_consulta[escolha - 1]
-        
-    except ValueError:
-        print("Digite um número")
 
 def mostrar_todos_doutores() -> None: 
     limpar_tela()
@@ -279,71 +344,106 @@ def listar_doutores(sql: str, parametro: str = None) -> str:
 # funcao que lista todos os itens da tabela
 def listar_consultas() -> str:  
     lista_consulta = []  # Lista para captura de dados do Banco
-    #try:
-    global usuario_logado
-    inst_consulta.execute(F"""SELECT c.id_consulta, c.nm_paciente, d.nm_doutor, d.tipo_consulta, c.dt_consulta, c.cep FROM T_HCFMUSP_CONSULTAS c JOIN T_HCFMUSP_DOUTORES d ON c.id_doutor = d.id_doutor WHERE c.nm_paciente ='{usuario_logado}' """)
-    # Captura todos os registros da tabela e armazena no objeto data
-    data = inst_consulta.fetchall()
-    # Insere os valores da tabela na Lista
-    for dt in data:
-        lista_consulta.append(dt)
-    # ordena a lista
-    lista_consulta = sorted(lista_consulta)
-    # Gera um DataFrame com os dados da lista utilizando o Pandas
-    dados_df = pd.DataFrame.from_records(
-        lista_consulta, columns=["id_consulta", "nm_paciente", "nm_doutor", "tipo_consulta", "dt_consulta", "cep"],index="id_consulta")
-    
-    # Verifica se não há registro através do dataframe
-    if dados_df.empty:
-        return "Nenhuma consulta foi registrada ainda"
-    else:
-        return dados_df
-    # except ValueError:
-    #     print("Digite um valor válido!")
-    # except:
-    #     print("Erro na transação do BD")
+    try:
+        nm_paciente = pegar_usuario_logado()
+        # Instrução SQL com base no que foi sele
+        inst_consulta.execute(F"""SELECT c.id_consulta, c.nm_paciente, d.nm_doutor, d.tipo_consulta, c.dt_consulta, c.cep FROM T_HCFMUSP_CONSULTAS c JOIN T_HCFMUSP_DOUTORES d ON c.id_doutor = d.id_doutor WHERE c.nm_paciente ='{nm_paciente}' """)
+        # Captura todos os registros da tabela e armazena no objeto data
+        data = inst_consulta.fetchall()
+        # Insere os valores da tabela na Lista
+        for dt in data:
+            lista_consulta.append(dt)
+        # ordena a lista
+        lista_consulta = sorted(lista_consulta)
+        # Gera um DataFrame com os dados da lista utilizando o Pandas
+        dados_df = pd.DataFrame.from_records(
+            lista_consulta, columns=["id_consulta", "nm_paciente", "nm_doutor", "tipo_consulta", "dt_consulta", "cep"],index="id_consulta")
+        
+        # Verifica se não há registro através do dataframe
+        if dados_df.empty:
+            return "Nenhuma consulta foi registrada ainda"
+        else:
+            return dados_df
+    except ValueError:
+        print("Digite um valor válido!")
+    except:
+        print("Erro na transação do BD")
 
 def remarcar_consulta() -> None:
-    while True:
-        try:
-            limpar_tela()
-            print("-"*10, "Remarcar Consulta", "-"*10)
-            df = listar_consultas()
-            print(df)
-            id_consulta = input("Digite a consulta que deseja remarcar:")
-            data_str = input("Digite a nova data e hora da consulta (DD/MM/YYYY):").strip()
-            dt_consulta = datetime.strptime(data_str, "%d/%m/%Y")
-            sql = f""" UPDATE T_HCFMUSP_CONSULTAS SET dt_consulta = :1 WHERE id_consulta = :2 """
-            # Executa a instrução e atualiza a tabela
-            inst_alteracao.execute(sql,(dt_consulta,id_consulta))
-            conn.commit()
-            # Exibe mensagem caso haja sucesso
-            print("##### CONSULTA REMARCADA! #####")
-            break
-        except ValueError:
-            print("Digite um valor válido!")
-        except:
-            print("Erro na transação do BD")
+  
+    limpar_tela()
+    print("-"*10, "Remarcar Consulta", "-"*10)
+    df = listar_consultas()
+    print(df)
+    print()
+    print("Digite o ID da consulta que deseja remarcar:")
+
+    id_consulta = selecionar_consulta()
+    if id_consulta is None:
+        print("ID inválido. Operação cancelada.")
+        return
+    
+    dt_consulta = escolher_data_hora_consulta()
+    if dt_consulta == "0":
+        print("Operação cancelada!")
+        return
+
+    gravado = atualizar_consulta(dt_consulta, id_consulta)
+    if gravado == True:
+        print("##### CONSULTA REMARCADA COM SUCESSO! #####")
+    else:
+        print("ERRO AO REMARCAR CONSULTA!")
+
+def selecionar_consulta() -> int:
+    try:
+        id_consulta = int(input("Digite o ID da consulta"))
+        return id_consulta
+    except ValueError:
+        return None
+
+def atualizar_consulta(dt_consulta: str, id_consulta) -> bool:
+    gravado = False
+    try:
+        sql = f""" UPDATE T_HCFMUSP_CONSULTAS SET dt_consulta = :1 WHERE id_consulta = :2 """
+        inst_alteracao.execute(sql,(dt_consulta,id_consulta))
+        conn.commit()
+        gravado = True
+        return gravado
+    except:
+        return gravado
 
 def cancelar_consulta() -> None:
     limpar_tela()
+    print("-"*10, "Cancelar Consulta", "-"*10)
+    df = listar_consultas()
+    print(df)
+    print()
+    print("Digite o ID da consulta que deseja cancelar:")
+    id_consulta = selecionar_consulta()
+
+    print("Tem certeza que deseja cancelar esta consulta?:")
+    confirmacao = confirmar()
+    if confirmacao == False:
+        print("Operação cancelada!")
+        return
+    deletado = deletar_item_consulta(id_consulta)
+
+    if deletado == True:
+        print("##### CONSULTA CANCELADA COM SUCESSO! #####")
+    else:
+        print("ERRO AO CANCELAR CONSULTA!")
+
+def deletar_item_consulta(id_consulta: str) -> bool:
+    deletado = False
     try:
-        print("-"*10, "Cancelar Consulta", "-"*10)
-        df = listar_consultas()
-        print(df)
-        id_consulta = input("Digite a consulta que deseja cancelar:")
-        confirmacao = input(f"Tem certeza que quer apagar a consulta {id_consulta}? (Sim/Não)").strip().lower()
-        if confirmacao == "sim" or confirmacao == "s":
-            sql = f""" DELETE FROM T_HCFMUSP_CONSULTAS WHERE id_consulta = :1 """
-            # Executa a instrução e atualiza a tabela
-            inst_exclusao.execute(sql, (id_consulta,))
-            conn.commit()
-            # Exibe mensagem caso haja sucesso
-            print("##### CONSULTA CANCELADA! #####")
-        else: 
-            print("Deleção cancelada!")
+        sql = f""" DELETE FROM T_HCFMUSP_CONSULTAS WHERE id_consulta = :1 """
+        # Executa a instrução e atualiza a tabela
+        inst_exclusao.execute(sql, (id_consulta,))
+        conn.commit()
+        deletado = True
+        return deletado
     except:
-        print("Erro na transação do BD")
+        return deletado
 
 def trasformar_df_dicionario(df: pd.DataFrame) -> dict:
     dicionario = {}
@@ -353,7 +453,7 @@ def trasformar_df_dicionario(df: pd.DataFrame) -> dict:
             "nm_paciente": coluna["nm_paciente"],
             "nm_doutor": coluna["nm_doutor"],
             "tipo_consulta": coluna["tipo_consulta"],
-            "dt_consulta": coluna["dt_consulta"].strftime("%d/%m/%Y %H:%M:%S"),
+            "dt_consulta": coluna["dt_consulta"].strftime("%d/%m/%Y-%H:%M"),
             "cep": coluna["cep"]
         }
 
