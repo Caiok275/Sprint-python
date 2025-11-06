@@ -208,12 +208,12 @@ def escolha_tipo_consulta() -> str | bool:
 
     while True:
         try:
-            escolha = int(input("\nDigite o número da consulta desejada: "))
-            if escolha < 1 or escolha > len(tipos_consulta):
+            escolha = int(input("\nDigite o número da consulta desejada ou digite 0 para voltar: "))
+            if escolha == 0:
+                return escolha
+            elif escolha < 1 or escolha > len(tipos_consulta):
                 input("Escolha inválida, pressione ENTER para continuar...")
                 continue
-            elif escolha == 0:
-                return escolha
             else:
                 return tipos_consulta[escolha - 1]
         except ValueError:
@@ -252,10 +252,6 @@ def escolher_data_hora_consulta() -> str:
         if hora_str == "0":
             return hora_str
         data_hora = transformar_data_hora(data_str, hora_str)
-
-        if data_hora is None:
-            input("Data ou hora inválida. pressione ENTER para continuar...")
-            continue
         
         agora = data_agora()
         if data_hora < agora:
@@ -311,8 +307,13 @@ def inserir_dados_consulta(nm_paciente: str, id_doutor: str, dt_consulta: dateti
 def mostrar_suas_consultas():
     limpar_tela()
     df = listar_consultas()
-    print("-"*10, "Suas Consultas", "-"*10)
-    print(df)
+    if df == None:
+        print("Nenhuma consulta agendada!")
+        print()
+        return  
+    else:
+        print("-"*10, "Suas Consultas", "-"*10)
+        print(df)
 
 def mostrar_todos_doutores() -> None: 
     limpar_tela()
@@ -383,7 +384,7 @@ def listar_consultas() -> str:
         print("Erro na transação do BD")
 
 def remarcar_consulta() -> None:
-  
+
     limpar_tela()
     print("-"*10, "Remarcar Consulta", "-"*10)
     df = listar_consultas()
@@ -391,9 +392,10 @@ def remarcar_consulta() -> None:
         print("Nenhuma consulta para remarcar!")
         print()
         return
-    
-    print(df)
-    print()
+    else:
+        print(df)
+        print()
+
     id_consulta = selecionar_consulta()
     if id_consulta is None:
         print("ID inválido. Operação cancelada.")
