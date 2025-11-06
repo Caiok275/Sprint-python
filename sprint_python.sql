@@ -10,6 +10,7 @@ CREATE TABLE T_HCFMUSP_CONSULTAS (
     nm_paciente VARCHAR2(80) NOT NULL,
     id_doutor INT NOT NULL,
     dt_consulta DATE,
+    cidade VARCHAR2(10),
     CONSTRAINT consulta_pk PRIMARY KEY (id_consulta),
     CONSTRAINT fk_doutor FOREIGN KEY (id_doutor)
         REFERENCES T_HCFMUSP_DOUTORES (id_doutor)
@@ -35,3 +36,5 @@ VALUES ('Dr.Lucas', 'Raio-X');
 
 INSERT INTO T_HCFMUSP_DOUTORES (nm_doutor, tipo_consulta)
 VALUES ('Dr.Vitor', 'Ultrassom');
+
+ALTER TABLE T_HCFMUSP_CONSULTAS RENAME COLLUMN cep TO cidade;

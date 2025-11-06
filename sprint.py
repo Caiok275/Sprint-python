@@ -169,36 +169,39 @@ def login():
 
 # ======== Funções do menu principal ========
 def agendar() -> None:
-    limpar_tela()
+    while True:
+        limpar_tela()
+        print("-"*10, "Agendar Consulta", "-"*10)
 
-    print("-"*10, "Agendar Consulta", "-"*10)
+        nm_paciente = pegar_usuario_logado()
+        escolha = escolha_tipo_consulta()
+        if escolha == 0:
+            print("Gendamento cancelado!")
+            break
+        
+        id_doutor = escolher_doutor(escolha)
+        if id_doutor == 0:
+            print("Gendamento cancelado!")
+            break
+        
+        dt_consulta = escolher_data_hora_consulta()
+        if dt_consulta == "0":
+            print("Gendamento cancelado!")
+            break
+        
+        cidade = api_cidade()
 
-    nm_paciente = pegar_usuario_logado()
-    escolha = escolha_tipo_consulta()
-    if escolha == "0":
-        print("Gendamento cancelado!")
-        return
-    
-    id_doutor = escolher_doutor(escolha)
-    if id_doutor is "0":
-        print("Gendamento cancelado!")
-        return
-    
-    dt_consulta = escolher_data_hora_consulta()
-    if dt_consulta == "0":
-        print("Gendamento cancelado!")
-        return
-    
-    cep = api_cep()
-
-    gravado = inserir_dados_consulta(nm_paciente,id_doutor,dt_consulta,cep)
-    if gravado == True:
-        print("##### CONSULTA AGENDADA COM SUCESSO! #####")
-    else:
-        print("ERRO AO AGENDAR CONSULTA!")
+        gravado = inserir_dados_consulta(nm_paciente,id_doutor,dt_consulta,cidade)
+        if gravado == True:
+            print("##### CONSULTA AGENDADA COM SUCESSO! #####")
+            break
+        else:
+            print("ERRO AO AGENDAR CONSULTA!")
+            break
         
 def escolha_tipo_consulta() -> str | bool:
-    tipos_consulta = ["Exame Geral", "Exame de sangue", "Raio-X", "UltraSom"]
+    limpar_tela()
+    tipos_consulta = ["Exame Geral", "Exame de sangue", "Raio-X", "Ultrassom"]
     print("Selecione o tipo de consulta:")
     for i, consulta in enumerate(tipos_consulta, start=1):
         print(f"{i}. {consulta}")
@@ -249,20 +252,34 @@ def escolher_data_hora_consulta() -> str:
         if hora_str == "0":
             return hora_str
         data_hora = transformar_data_hora(data_str, hora_str)
+
         if data_hora is None:
             input("Data ou hora inválida. pressione ENTER para continuar...")
             continue
+        
+        agora = data_agora()
+        if data_hora < agora:
+            print("Não é possível agendar uma consulta para uma data/hora no passado.")
+            input("Pressione ENTER para continuar...")
+            continue
+
         return data_hora
-    
+
+def data_agora() -> datetime:
+    agora = datetime.now()
+    return agora
+
 def data_consulta() -> datetime:
     while True:
         try:
             data_str = input("Digite a data da consulta (DD/MM/YYYY) ou digite 0 para cancelar:").strip()
             if data_str == "0":
                 return data_str
+            datetime.strptime(data_str, "%d/%m/%Y")
             return data_str
+        
         except ValueError:
-            input("Formato de data inválido. pressione ENTER para continuar....")
+            print("Formato de data inválido. Tente novamente.")
 
 def hora_consulta() -> str:
     while True:
@@ -270,26 +287,21 @@ def hora_consulta() -> str:
             hora_str = input("Digite a hora da consulta (HH:MM) ou digite 0 para cancelar:").strip()
             if hora_str == "0":
                 return hora_str
+            datetime.strptime(hora_str, "%H:%M")
             return hora_str
         except ValueError:
-            input("Hora inválida. pressione ENTER para continuar...")
+            print("Formato de hora inválido. Tente novamente.")
 
-def transformar_data_hora(data_str: str, hora_str: str) -> datetime:
-    data_str += "-" + hora_str
-    try:
-        dt_consulta = datetime.strptime(data_str, "%d/%m/%Y-%H:%M")
-        return dt_consulta
-    
-    except ValueError:
-        print("Formato de data e hora inválido. Certifique-se de usar DD/MM/YYYY para data e HH:MM para hora")
-        input("Pressione ENTER para continuar...")
-        return None
+def transformar_data_hora(data: datetime, hora: datetime) -> datetime:
+    data_hora_str = f"{data}-{hora}"
+    data_hora = datetime.strptime(data_hora_str, "%d/%m/%Y-%H:%M")
+    return data_hora
 
-def inserir_dados_consulta(nm_paciente: str, id_doutor: str, dt_consulta: datetime, cep: str) -> bool:
+def inserir_dados_consulta(nm_paciente: str, id_doutor: str, dt_consulta: datetime, cidade: str) -> bool:
     gravado = False
     try:
-        sql = """ INSERT INTO T_HCFMUSP_CONSULTAS (nm_paciente,id_doutor,dt_consulta,cep)VALUES (:1,:2,:3,:4) """
-        inst_cadastro.execute(sql,(nm_paciente,id_doutor,dt_consulta,cep))
+        sql = """ INSERT INTO T_HCFMUSP_CONSULTAS (nm_paciente,id_doutor,dt_consulta,cidade)VALUES (:1,:2,:3,:4) """
+        inst_cadastro.execute(sql,(nm_paciente,id_doutor,dt_consulta,cidade))
         conn.commit()
         gravado = True
         return gravado
@@ -348,7 +360,7 @@ def listar_consultas() -> str:
     try:
         nm_paciente = pegar_usuario_logado()
         # Instrução SQL com base no que foi sele
-        inst_consulta.execute(F"""SELECT c.id_consulta, c.nm_paciente, d.nm_doutor, d.tipo_consulta, c.dt_consulta, c.cep FROM T_HCFMUSP_CONSULTAS c JOIN T_HCFMUSP_DOUTORES d ON c.id_doutor = d.id_doutor WHERE c.nm_paciente ='{nm_paciente}' """)
+        inst_consulta.execute(F"""SELECT c.id_consulta, c.nm_paciente, d.nm_doutor, d.tipo_consulta, c.dt_consulta, c.cidade FROM T_HCFMUSP_CONSULTAS c JOIN T_HCFMUSP_DOUTORES d ON c.id_doutor = d.id_doutor WHERE c.nm_paciente ='{nm_paciente}' """)
         # Captura todos os registros da tabela e armazena no objeto data
         data = inst_consulta.fetchall()
         # Insere os valores da tabela na Lista
@@ -358,11 +370,11 @@ def listar_consultas() -> str:
         lista_consulta = sorted(lista_consulta)
         # Gera um DataFrame com os dados da lista utilizando o Pandas
         dados_df = pd.DataFrame.from_records(
-            lista_consulta, columns=["id_consulta", "nm_paciente", "nm_doutor", "tipo_consulta", "dt_consulta", "cep"],index="id_consulta")
+            lista_consulta, columns=["id_consulta", "nm_paciente", "nm_doutor", "tipo_consulta", "dt_consulta", "cidade"],index="id_consulta")
         
         # Verifica se não há registro através do dataframe
         if dados_df.empty:
-            return "Nenhuma consulta foi registrada ainda"
+            return None
         else:
             return dados_df
     except ValueError:
@@ -375,10 +387,13 @@ def remarcar_consulta() -> None:
     limpar_tela()
     print("-"*10, "Remarcar Consulta", "-"*10)
     df = listar_consultas()
+    if df == None:
+        print("Nenhuma consulta para remarcar!")
+        print()
+        return
+    
     print(df)
     print()
-    print("Digite o ID da consulta que deseja remarcar:")
-
     id_consulta = selecionar_consulta()
     if id_consulta is None:
         print("ID inválido. Operação cancelada.")
@@ -397,7 +412,9 @@ def remarcar_consulta() -> None:
 
 def selecionar_consulta() -> int:
     try:
-        id_consulta = int(input("Digite o ID da consulta"))
+        id_consulta = int(input("Digite o ID da consulta:"))
+        if id_consulta not in listar_consultas().index:
+            return None
         return id_consulta
     except ValueError:
         return None
@@ -417,11 +434,18 @@ def cancelar_consulta() -> None:
     limpar_tela()
     print("-"*10, "Cancelar Consulta", "-"*10)
     df = listar_consultas()
+    if df == None:
+        print("Nenhuma consulta para cancelar!")
+        print()
+        return
+    
     print(df)
     print()
     print("Digite o ID da consulta que deseja cancelar:")
     id_consulta = selecionar_consulta()
-
+    if id_consulta is None:
+        print("ID inválido. Operação cancelada.")
+        return
     print("Tem certeza que deseja cancelar esta consulta?:")
     confirmacao = confirmar()
     if confirmacao == False:
@@ -455,7 +479,7 @@ def trasformar_df_dicionario(df: pd.DataFrame) -> dict:
             "nm_doutor": coluna["nm_doutor"],
             "tipo_consulta": coluna["tipo_consulta"],
             "dt_consulta": coluna["dt_consulta"].strftime("%d/%m/%Y-%H:%M"),
-            "cep": coluna["cep"]
+            "cidade": coluna["cidade"]
         }
 
     return dicionario
@@ -476,12 +500,12 @@ def gerar_arquivo() -> None:
             print("Arquivo já existe, escolha outro nome")
 
 # ================= API =================
-def api_cep() -> list:
+def api_cidade() -> list:
     requisicao = requests.get("https://cep.awesomeapi.com.br/json/01001000")
     requisicao_dict = requisicao.json()
-    cep = requisicao_dict["cep"]
+    cidade = requisicao_dict["city"]
 
-    return cep
+    return cidade
 
 # ================= Menu Principal =================
 def menu():
@@ -547,4 +571,4 @@ while conexao:
         menu()
 
 
-# TODO Validação de dados caso o df esteja vazio, consertar a consulta Ultrasom e impedir o usuário de agendar uma consulta no passado
+# TODO Fazer com que ao digitar 0 o programa volte ao menu anterior
